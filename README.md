@@ -66,14 +66,14 @@ This structure follows the Repository pattern and is designed to support:
 - Node.js (v14 or later)
 - npm (v6 or later)
 
-### Running the Backend API
+### Running the Backend
 
 1. Navigate to the API directory:
    ```powershell
    cd PalindromeCheckerApi
    ```
 
-2. Build and run the API:
+2. Build and run:
    ```powershell
    dotnet run
    ```
