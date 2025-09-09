@@ -209,7 +209,6 @@ dotnet test
 
 ### Test Coverage
 - Basic palindrome validation
-- Case sensitivity
 - Special characters and numbers
 - Empty strings
 - Null inputs
@@ -227,6 +226,7 @@ dotnet test
      - Keep SQL separate from C# code
 
 2. **Frontend Changes**
+   - Originally was using windows frames, seemed clunky and not useful to learn so switched to React
    - Make changes in React components
    - Start development server: `npm start`
    - Changes hot-reload automatically
@@ -242,8 +242,3 @@ dotnet test
    - Clear npm cache: `npm cache clean --force`
    - Reinstall dependencies: `rm -rf node_modules && npm install`
    - Check API URL in configuration
-
-3. **CORS Issues**
-   - Verify API is running on expected port
-   - Check CORS configuration in Program.cs
-   - Verify frontend URL matches CORS policy
