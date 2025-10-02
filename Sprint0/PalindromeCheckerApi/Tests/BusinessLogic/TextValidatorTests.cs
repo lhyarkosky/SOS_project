@@ -49,7 +49,7 @@ namespace PalindromeCheckerApi.Tests.BusinessLogic
         public void IsPalindrome_WithSpecialCharsAndNumbers_ReturnsTrue()
         {
             // Arrange
-            string input = "A1b2c3:c2b1a"; // Should be a palindrome when only letters are considered
+            string input = "A1b2c3:c2b1a"; 
 
             // Act
             bool result = TextValidator.IsPalindrome(input);
