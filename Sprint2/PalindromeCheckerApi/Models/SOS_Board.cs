@@ -22,7 +22,7 @@ namespace PalindromeCheckerApi.Models
         [JsonIgnore]
         public Dictionary<(int row, int col), char> Board => new Dictionary<(int row, int col), char>(board);
 
-        // rather use JSON friendly dictionary representation
+        // get/set JSON friendly dictionary representation
         [JsonPropertyName("Board")]
         public Dictionary<string, char> SerializableBoard
         {
