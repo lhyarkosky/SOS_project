@@ -1,4 +1,5 @@
-using System.Text.Json.Serialization;
+using System;
+using System.Collections.Generic;
 
 namespace PalindromeCheckerApi.Models
 {
@@ -18,41 +19,10 @@ namespace PalindromeCheckerApi.Models
             }
         }
 
-        // Dont want to serialize the internal dictionary directly
-        [JsonIgnore]
+      
+        // Gets a copy of the internal board state for programmatic access, returns a defensive copy to prevent external modification of internal state.
+    
         public Dictionary<(int row, int col), char> Board => new Dictionary<(int row, int col), char>(board);
-
-        // get/set JSON friendly dictionary representation
-        [JsonPropertyName("Board")]
-        public Dictionary<string, char> SerializableBoard
-        {
-            get
-            {
-                var result = new Dictionary<string, char>();
-                foreach (var kvp in board)
-                {
-                    result[$"{kvp.Key.row},{kvp.Key.col}"] = kvp.Value;
-                }
-                return result;
-            }
-            set
-            {
-                board = new Dictionary<(int row, int col), char>();
-                if (value != null)
-                {
-                    foreach (var kvp in value)
-                    {
-                        var parts = kvp.Key.Split(',');
-                        if (parts.Length == 2 && 
-                            int.TryParse(parts[0], out int row) && 
-                            int.TryParse(parts[1], out int col))
-                        {
-                            board[(row, col)] = kvp.Value;
-                        }
-                    }
-                }
-            }
-        }
 
         // Constructor
         public SOS_Board(int boardSize)
