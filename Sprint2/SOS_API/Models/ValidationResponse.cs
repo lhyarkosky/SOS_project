@@ -1,4 +1,4 @@
-namespace PalindromeCheckerApi.Models
+namespace SOS_API.Models
 {
     public class ValidationResponse
     {

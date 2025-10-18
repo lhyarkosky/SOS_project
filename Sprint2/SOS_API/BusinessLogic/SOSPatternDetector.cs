@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using PalindromeCheckerApi.Models;
+using SOS_API.Models;
 
-namespace PalindromeCheckerApi.BusinessLogic
+namespace SOS_API.BusinessLogic
 {
     public static class SOSPatternDetector
     {

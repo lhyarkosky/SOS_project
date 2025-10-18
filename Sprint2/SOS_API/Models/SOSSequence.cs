@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace PalindromeCheckerApi.Models
+namespace SOS_API.Models
 {
     // Domain model representing a detected SOS sequence in the game.
     // Contains the positions, direction, and player information.

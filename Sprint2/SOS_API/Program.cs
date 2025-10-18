@@ -9,6 +9,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register application services
+builder.Services.AddSingleton<SOS_API.Services.IGameService, SOS_API.Services.GameService>();
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {

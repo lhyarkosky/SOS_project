@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using PalindromeCheckerApi.Models;
-using PalindromeCheckerApi.Models.GameStates;
+using SOS_API.Models;
+using SOS_API.Models.GameStates;
 
-namespace PalindromeCheckerApi.BusinessLogic
+namespace SOS_API.BusinessLogic
 {
     public static class Game
     {
@@ -11,7 +11,17 @@ namespace PalindromeCheckerApi.BusinessLogic
         public static IGameState CreateGameState(string gameMode, int boardSize)
         {
             var gameId = Guid.NewGuid().ToString();
-            var board = new SOS_Board(boardSize);
+            
+            SOS_Board board;
+            try
+            {
+                board = new SOS_Board(boardSize);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                // Convert to ArgumentException for consistent API error handling
+                throw new ArgumentException($"Invalid board size: {e.Message}");
+            }
             
             IGameState gameState = gameMode.ToLower() switch
             {

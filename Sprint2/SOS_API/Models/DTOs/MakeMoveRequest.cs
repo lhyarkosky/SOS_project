@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PalindromeCheckerApi.Models.DTOs
+namespace SOS_API.Models.DTOs
 {
     public class MakeMoveRequest
     {

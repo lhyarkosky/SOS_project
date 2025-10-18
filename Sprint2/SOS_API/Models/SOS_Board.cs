@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PalindromeCheckerApi.Models
+namespace SOS_API.Models
 {
     public class SOS_Board
     {

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using PalindromeCheckerApi.Models;
-using PalindromeCheckerApi.Models.GameStates;
+using SOS_API.Models;
+using SOS_API.Models.GameStates;
 
-namespace PalindromeCheckerApi.Services
+namespace SOS_API.Services
 {
     public interface IGameService
     {

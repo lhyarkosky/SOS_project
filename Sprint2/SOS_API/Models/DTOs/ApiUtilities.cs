@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using PalindromeCheckerApi.Models.GameStates;
+using SOS_API.Models.GameStates;
 
-namespace PalindromeCheckerApi.Models.DTOs
+namespace SOS_API.Models.DTOs
 {
 
     // Utility methods for API serialization

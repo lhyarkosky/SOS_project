@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PalindromeCheckerApi.Models.GameStates
+namespace SOS_API.Models.GameStates
 {
     public enum GameStatus
     {

@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace PalindromeCheckerApi.Models.GameStates
+namespace SOS_API.Models.GameStates
 {
     public class SimpleGameState : BaseGameState
     {

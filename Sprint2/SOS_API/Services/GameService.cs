@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PalindromeCheckerApi.BusinessLogic;
-using PalindromeCheckerApi.Models;
-using PalindromeCheckerApi.Models.GameStates;
+using SOS_API.BusinessLogic;
+using SOS_API.Models;
+using SOS_API.Models.GameStates;
 
-namespace PalindromeCheckerApi.Services
+namespace SOS_API.Services
 {
     public class GameService : IGameService
     {
@@ -13,12 +13,21 @@ namespace PalindromeCheckerApi.Services
 
         public IGameState CreateGame(int boardSize, string gameMode)
         {
-            // create the game state
-            var game = Game.CreateGameState(gameMode, boardSize);
-            
-            // Store in our dictionary
-            _games[game.GameId] = game;
-            return game;
+            try
+            {
+                // Let the business logic and models handle their own validation
+                var game = Game.CreateGameState(gameMode, boardSize);
+                
+                // Store in our dictionary
+                _games[game.GameId] = game;
+                return game;
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                // Convert ArgumentOutOfRangeException from SOS_Board to ArgumentException for API consistency
+                throw new ArgumentException(e.Message, e);
+            }
+            // ArgumentException from Game.CreateGameState (invalid game mode) bubbles up as-is
         }
 
         public (IGameState game, List<SOSSequence> newSequences) MakeMove(string gameId, int row, int col, char letter)
@@ -27,13 +36,22 @@ namespace PalindromeCheckerApi.Services
             if (!_games.TryGetValue(gameId, out IGameState? game))
                 throw new ArgumentException("Game not found");
 
-            // Business logic layer: process the move
-            var (updatedGame, newSequences) = Game.ProcessMove(game, row, col, letter);
-            
-            // Service layer: update storage
-            _games[gameId] = updatedGame;
-            
-            return (updatedGame, newSequences);
+            try
+            {
+                // Business logic layer: process the move - let domain exceptions bubble up
+                var (updatedGame, newSequences) = Game.ProcessMove(game, row, col, letter);
+                
+                // Service layer: update storage
+                _games[gameId] = updatedGame;
+                
+                return (updatedGame, newSequences);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                // Convert position validation errors to ArgumentException for API consistency
+                throw new ArgumentException(e.Message, e);
+            }
+            // InvalidOperationException and other domain exceptions bubble up as-is
         }
 
         public IGameState? GetGame(string gameId)

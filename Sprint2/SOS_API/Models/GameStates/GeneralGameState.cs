@@ -1,4 +1,4 @@
-namespace PalindromeCheckerApi.Models.GameStates
+namespace SOS_API.Models.GameStates
 {
     public class GeneralGameState : BaseGameState
     {
