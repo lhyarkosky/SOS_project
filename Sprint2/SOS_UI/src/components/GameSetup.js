@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import GameService from '../services/GameService';
 import './GameSetup.css';
 
 const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
@@ -21,15 +22,15 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || `Failed to create game: ${response.status}`);
+        const errorMessage = await GameService.getErrorMessage(response, `Failed to create game: ${response.status}`);
+        throw new Error(errorMessage);
       }
 
       const gameData = await response.json();
       onGameCreated(gameData);
     } catch (error) {
       console.error('Error creating game:', error);
-      onError(`Failed to create game: ${error.message}`);
+      onError(error.message);
     } finally {
       setIsLoading(false);
     }
