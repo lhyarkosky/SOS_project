@@ -13,18 +13,6 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
   const cells = gameData.board.cells || {};
 
   const makeMove = async (row, col) => {
-    if (gameData.status?.toLowerCase() !== 'inprogress') {
-      onError('Game is not in progress');
-      return;
-    }
-
-    // Check if cell is already occupied
-    const cellKey = `${row},${col}`;
-    if (cells[cellKey]) {
-      onError('Cell is already occupied');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -42,8 +30,9 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
       });
 
       if (!response.ok) {
-        const errorMessage = await GameService.getErrorMessage(response, `Move failed: ${response.status}`);
-        throw new Error(errorMessage);
+        const errorMessage = await GameService.getErrorMessage(response,  response.status);
+        onError(errorMessage);
+        return;
       }
 
       const moveResult = await response.json();
@@ -59,7 +48,8 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
 
     } catch (error) {
       console.error('Error making move:', error);
-      onError(`Failed to make move: ${error.message}`);
+      const errorMessage = await GameService.getErrorMessage(null, 'Network error occurred');
+      onError(errorMessage);
     } finally {
       setIsLoading(false);
     }

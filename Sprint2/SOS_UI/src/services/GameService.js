@@ -5,32 +5,41 @@ class GameService {
   // Parse error response and return user-friendly message
   static async getErrorMessage(response, defaultMessage) {
     try {
-      const errorData = await response.json();
+      // First try to get as text
+      const responseText = await response.text();
       
-      // Check if it's a validation error response
-      if (errorData.errors) {
-        const validationErrors = [];
-        for (const [field, messages] of Object.entries(errorData.errors)) {
-          validationErrors.push(`${field}: ${messages.join(', ')}`);
-        }
-        return validationErrors.join('; ');
-      } else if (errorData.title) {
-        return errorData.title;
+      // If it's just a plain string (no JSON structure), return it directly
+      if (responseText && !responseText.trim().startsWith('{')) {
+        return responseText;
       }
-    } catch (parseError) {
-      // If JSON parsing fails, try text
-      try {
-        const textError = await response.text();
-        if (textError) {
-          return textError;
+      
+      // If it looks like JSON, try to parse it
+      if (responseText) {
+        try {
+          const errorData = JSON.parse(responseText);
+          
+          // Check if it's a validation error response
+          if (errorData.errors) {
+            const validationErrors = [];
+            for (const [field, messages] of Object.entries(errorData.errors)) {
+              validationErrors.push(`${field}: ${messages.join(', ')}`);
+            }
+            return validationErrors.join('; ');
+          } else if (errorData.title) {
+            return errorData.title;
+          }
+        } catch (parseError) {
+          // If JSON parsing fails but we have text, return the text
+          return responseText;
         }
-      } catch (textError) {
-        // If everything fails, return default
       }
+    } catch (error) {
+      // If everything fails, return default
     }
-    
+
     return defaultMessage || `Request failed: ${response.status}`;
   }
+
   // Create a new game
   static async createGame(boardSize, gameMode) {
     const response = await fetch(`${API_BASE}/create`, {
