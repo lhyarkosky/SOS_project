@@ -41,7 +41,7 @@ namespace SOS_API.Models.DTOs
                     foundBy = seq.FoundBy?.Name
                 }).ToArray(),
                 scores = game.Scores.ToDictionary(kvp => kvp.Key.Name, kvp => kvp.Value),
-                winner = game.Winner?.Name,
+                winner = game.Status == GameStatus.Finished ? game.DetermineWinner() : null,
                 createdAt = game.CreatedAt,
                 lastMoveAt = game.LastMoveAt
             };
