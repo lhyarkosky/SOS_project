@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using SOS_API.Models;
+using SOS_API.Models.Players;
 
 namespace SOS_API.BusinessLogic
 {
     public static class SOSPatternDetector
     {
         // Find all SOS sequences that include the last placed letter, track the sequences found, the direction (for drawing line through seq's), and the player who found them (for color of line).
-        public static List<SOSSequence> FindNewSOSSequences(SOS_Board board, int lastRow, int lastCol, string currentPlayer)
+        public static List<SOSSequence> FindNewSOSSequences(SOS_Board board, int lastRow, int lastCol, IPlayer currentPlayer)
         {
             var newSequences = new List<SOSSequence>();
             char? lastLetter = board.GetCell(lastRow, lastCol);
@@ -22,7 +23,7 @@ namespace SOS_API.BusinessLogic
             return newSequences;
         }
 
-        private static List<SOSSequence> FindHorizontalSOS(SOS_Board board, int row, int col, string player)
+        private static List<SOSSequence> FindHorizontalSOS(SOS_Board board, int row, int col, IPlayer player)
         {
             var sequences = new List<SOSSequence>();
 
@@ -65,7 +66,7 @@ namespace SOS_API.BusinessLogic
             return sequences;
         }
 
-        private static List<SOSSequence> FindVerticalSOS(SOS_Board board, int row, int col, string player)
+        private static List<SOSSequence> FindVerticalSOS(SOS_Board board, int row, int col, IPlayer player)
         {
             var sequences = new List<SOSSequence>();
 
@@ -108,7 +109,7 @@ namespace SOS_API.BusinessLogic
             return sequences;
         }
 
-        private static List<SOSSequence> FindDiagonalSOS(SOS_Board board, int row, int col, string player)
+        private static List<SOSSequence> FindDiagonalSOS(SOS_Board board, int row, int col, IPlayer player)
         {
             var sequences = new List<SOSSequence>();
 
@@ -121,7 +122,7 @@ namespace SOS_API.BusinessLogic
             return sequences;
         }
 
-        private static List<SOSSequence> FindDiagonalSOSDirection(SOS_Board board, int row, int col, string player, int rowDir, int colDir, string direction)
+        private static List<SOSSequence> FindDiagonalSOSDirection(SOS_Board board, int row, int col, IPlayer player, int rowDir, int colDir, string direction)
         {
             var sequences = new List<SOSSequence>();
 

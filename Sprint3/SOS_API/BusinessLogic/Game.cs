@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SOS_API.Models;
+using SOS_API.Models.Players;
 using SOS_API.Models.GameStates;
 
 namespace SOS_API.BusinessLogic
 {
     public static class Game
     {
-        // create game state based on mode and boardSize
-        public static IGameState CreateGameState(string gameMode, int boardSize)
+        // create game state based on mode, boardSize, and players
+        public static IGameState CreateGameState(string gameMode, int boardSize, List<IPlayer> players)
         {
+            if (players == null || players.Count != 2)
+                throw new ArgumentException("Exactly 2 players are required");
+
             var gameId = Guid.NewGuid().ToString();
             
             SOS_Board board;
@@ -25,13 +30,24 @@ namespace SOS_API.BusinessLogic
             
             IGameState gameState = gameMode.ToLower() switch
             {
-                "simple" => new SimpleGameState { GameId = gameId, Board = board },
-                "general" => new GeneralGameState { GameId = gameId, Board = board },
+                "simple" => new SimpleGameState(players) { GameId = gameId, Board = board },
+                "general" => new GeneralGameState(players) { GameId = gameId, Board = board },
                 _ => throw new ArgumentException($"Unknown game mode: {gameMode}")
             };
             gameState.Status = GameStatus.InProgress;
 
             return gameState;
+        }
+
+        // Overload for backward compatibility - creates default human players
+        public static IGameState CreateGameState(string gameMode, int boardSize)
+        {
+            var players = new List<IPlayer>
+            {
+                new HumanPlayer { Name = "Player1" },
+                new HumanPlayer { Name = "Player2" }
+            };
+            return CreateGameState(gameMode, boardSize, players);
         }
 
 
@@ -75,23 +91,26 @@ namespace SOS_API.BusinessLogic
             if (gameState.IsGameOver())
             {
                 gameState.Status = GameStatus.Finished;
-                gameState.Winner = gameState.DetermineWinner();
+                var winnerName = gameState.DetermineWinner();
+                gameState.Winner = gameState.Players.FirstOrDefault(p => p.Name == winnerName);
             }
             else
             {
                 // Handle turn switching based on game mode specific rules
                 if (!gameState.PlayerGetsAnotherTurn(newSequencesCount))
                 {
-                    gameState.CurrentPlayer = GetNextPlayer(gameState.CurrentPlayer);
+                    gameState.CurrentPlayer = GetNextPlayer(gameState);
                 }
             }
         }
 
 
         // Get the next player in turn order
-        private static string GetNextPlayer(string currentPlayer)
+        private static IPlayer GetNextPlayer(IGameState gameState)
         {
-            return currentPlayer == "Player1" ? "Player2" : "Player1";
+            var currentIndex = gameState.Players.IndexOf(gameState.CurrentPlayer);
+            var nextIndex = (currentIndex + 1) % gameState.Players.Count;
+            return gameState.Players[nextIndex];
         }
     }
 }
