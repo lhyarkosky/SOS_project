@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SOS_API.Models.Players;
 
 namespace SOS_API.Models
 {
@@ -8,14 +9,14 @@ namespace SOS_API.Models
     {
         public List<(int row, int col)> Positions { get; set; }
         public string Direction { get; set; } = string.Empty; // "horizontal", "vertical", "diagonal-right", "diagonal-left"
-        public string FoundBy { get; set; } = string.Empty; // "Player1" or "Player2"
+        public IPlayer? FoundBy { get; set; } // The player who found this sequence
 
         public SOSSequence()
         {
             Positions = new List<(int row, int col)>();
         }
 
-        public SOSSequence(List<(int row, int col)> positions, string direction, string foundBy)
+        public SOSSequence(List<(int row, int col)> positions, string direction, IPlayer foundBy)
         {
             Positions = positions;
             Direction = direction;
