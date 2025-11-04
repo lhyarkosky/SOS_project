@@ -39,18 +39,6 @@ namespace SOS_API.BusinessLogic
             return gameState;
         }
 
-        // Overload for backward compatibility - creates default human players
-        public static IGameState CreateGameState(string gameMode, int boardSize)
-        {
-            var players = new List<IPlayer>
-            {
-                new HumanPlayer { Name = "Player1" },
-                new HumanPlayer { Name = "Player2" }
-            };
-            return CreateGameState(gameMode, boardSize, players);
-        }
-
-
         // Process a complete move including validation, placement, and state updates
         public static (IGameState gameState, List<SOSSequence> newSequences) ProcessMove(
             IGameState gameState, int row, int col, char letter)
