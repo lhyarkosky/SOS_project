@@ -105,11 +105,61 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
     return grid;
   };
 
+
+  // Get the center of a cell in percent (relative to board)
+  const getCellCenterPercent = (row, col) => {
+    const step = 100 / boardSize;
+    return {
+      x: (col + 0.5) * step,
+      y: (row + 0.5) * step
+    };
+  };
+
+  // Render SVG lines for completed sequences (using positions and foundBy)
+  const renderSequenceLines = () => {
+    if (!gameData.completedSequences) return null;
+    return (
+      <svg
+        className="sos-overlay"
+        width="100%"
+        height="100%"
+        viewBox="0 0 100 100"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          pointerEvents: 'none',
+          zIndex: 2
+        }}
+        preserveAspectRatio="none"
+      >
+        {gameData.completedSequences.map((seq, idx) => {
+          if (!seq.positions || seq.positions.length < 2) return null;
+          const start = getCellCenterPercent(seq.positions[0].row, seq.positions[0].col);
+          const end = getCellCenterPercent(seq.positions[seq.positions.length - 1].row, seq.positions[seq.positions.length - 1].col);
+          const color = seq.foundBy === 'Player1' ? 'blue' : 'red';
+          return (
+            <line
+              key={idx}
+              x1={start.x}
+              y1={start.y}
+              x2={end.x}
+              y2={end.y}
+              stroke={color}
+              strokeWidth={2}
+              strokeLinecap="round"
+              opacity={0.5}
+            />
+          );
+        })}
+      </svg>
+    );
+  };
+
   return (
     <div className="game-board-container">
       <div className="board-header">
         <h3>Game Board</h3>
-        
         {gameData.status?.toLowerCase() === 'inprogress' && (
           <div className="letter-selector">
             <span className="selector-label">Choose letter:</span>
@@ -134,11 +184,13 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
       <div 
         className="game-board"
         style={{ 
+          position: 'relative',
           gridTemplateColumns: `repeat(${boardSize}, 1fr)`,
           gridTemplateRows: `repeat(${boardSize}, 1fr)`
         }}
       >
         {renderGrid()}
+        {renderSequenceLines()}
       </div>
 
       <div className="board-footer">
