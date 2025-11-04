@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SOS_API.Models.DTOs;
 using SOS_API.Services;
 using SOS_API.Models.GameStates;
+using SOS_API.Models.Players;
 using System;
 
 namespace SOS_API.Controllers
@@ -25,7 +26,11 @@ namespace SOS_API.Controllers
         {
             try
             {
-                var game = _gameService.CreateGame(request.BoardSize, request.GameMode);
+                // Create player objects based on request data
+                var player1 = CreatePlayer(request.Player1Name ?? "Player1", request.Player1Type);
+                var player2 = CreatePlayer(request.Player2Name ?? "Player2", request.Player2Type);
+                
+                var game = _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
                 
                 return Ok(ApiUtilities.SerializeGameForApi(game));
             }
@@ -33,6 +38,16 @@ namespace SOS_API.Controllers
             {
                 return StatusCode(500, $"An error occurred while creating the game: {e.Message}");
             }
+        }
+
+        private IPlayer CreatePlayer(string name, PlayerType playerType)
+        {
+            return playerType switch
+            {
+                PlayerType.Human => new HumanPlayer { Name = name },
+                PlayerType.Computer => throw new NotImplementedException("Computer players not yet implemented"),
+                _ => throw new ArgumentException($"Unknown player type: {playerType}")
+            };
         }
 
         // Make a move in the game
