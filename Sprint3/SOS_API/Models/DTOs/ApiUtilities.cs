@@ -30,17 +30,18 @@ namespace SOS_API.Models.DTOs
                         kvp => kvp.Value
                     )
                 },
-                currentPlayer = game.CurrentPlayer,
+                currentPlayer = game.CurrentPlayer?.Name,
                 status = game.Status.ToString(),
                 mode = game.Mode.ToString(),
+                players = game.Players.Select(p => p.Name).ToArray(),
                 completedSequences = game.CompletedSequences.Select(seq => new
                 {
                     positions = seq.Positions.Select(p => new { row = p.row, col = p.col }).ToArray(),
                     direction = seq.Direction,
-                    foundBy = seq.FoundBy
+                    foundBy = seq.FoundBy?.Name
                 }).ToArray(),
-                scores = game.Scores,
-                winner = game.Winner,
+                scores = game.Scores.ToDictionary(kvp => kvp.Key.Name, kvp => kvp.Value),
+                winner = game.Winner?.Name,
                 createdAt = game.CreatedAt,
                 lastMoveAt = game.LastMoveAt
             };
