@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SOS_API.BusinessLogic;
 using SOS_API.Models;
+using SOS_API.Models.Players;
 using SOS_API.Models.GameStates;
 
 namespace SOS_API.Services
@@ -11,12 +12,14 @@ namespace SOS_API.Services
     {
         private static Dictionary<string, IGameState> _games = new Dictionary<string, IGameState>(); // if this was a bigger project id use db rather than a dictionary, but this should suffice for now
 
-        public IGameState CreateGame(int boardSize, string gameMode)
+        public IGameState CreateGame(int boardSize, string gameMode, IPlayer player1, IPlayer player2)
         {
             try
             {
+                var players = new List<IPlayer> { player1, player2 };
+
                 // Let the business logic and models handle their own validation
-                var game = Game.CreateGameState(gameMode, boardSize);
+                var game = Game.CreateGameState(gameMode, boardSize, players);
                 
                 // Store in our dictionary
                 _games[game.GameId] = game;

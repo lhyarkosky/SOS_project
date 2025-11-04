@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using SOS_API.Models;
+using SOS_API.Models.Players;
 using SOS_API.Models.GameStates;
 
 namespace SOS_API.Services
 {
     public interface IGameService
     {
-        IGameState CreateGame(int boardSize, string gameMode);
+        IGameState CreateGame(int boardSize, string gameMode, IPlayer player1, IPlayer player2);
         (IGameState game, List<SOSSequence> newSequences) MakeMove(string gameId, int row, int col, char letter);
         IGameState? GetGame(string gameId);
         bool DeleteGame(string gameId);
