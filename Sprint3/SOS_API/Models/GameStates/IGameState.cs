@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SOS_API.Models.Players;
 
 namespace SOS_API.Models.GameStates
 {
@@ -19,18 +20,19 @@ namespace SOS_API.Models.GameStates
     {
         string GameId { get; set; }
         SOS_Board Board { get; set; }
-        string CurrentPlayer { get; set; }
+        IPlayer CurrentPlayer { get; set; }
         GameStatus Status { get; set; }
         GameMode Mode { get; }
         List<SOSSequence> CompletedSequences { get; set; }
-        Dictionary<string, int> Scores { get; set; }
-        string? Winner { get; set; }
+        Dictionary<IPlayer, int> Scores { get; set; }
+        IPlayer? Winner { get; set; }
         DateTime CreatedAt { get; set; }
         DateTime LastMoveAt { get; set; }
+        List<IPlayer> Players { get; set; }
 
         bool IsGameOver();
         string DetermineWinner();
         bool PlayerGetsAnotherTurn(int newSequencesCount);
-        void AddSequences(List<SOSSequence> sequences, string player);
+        void AddSequences(List<SOSSequence> sequences, IPlayer player);
     }
 }

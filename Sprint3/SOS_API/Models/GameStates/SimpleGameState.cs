@@ -1,9 +1,15 @@
 using System.Linq;
+using System.Collections.Generic;
+using SOS_API.Models.Players;
 
 namespace SOS_API.Models.GameStates
 {
     public class SimpleGameState : BaseGameState
     {
+        public SimpleGameState(List<IPlayer> players) : base(players)
+        {
+        }
+
         public override GameMode Mode => GameMode.Simple;
 
         public override bool IsGameOver()
@@ -16,11 +22,10 @@ namespace SOS_API.Models.GameStates
         {
             // In Simple mode, whoever formed the first SOS wins
             var firstSequence = CompletedSequences.FirstOrDefault();
-            if (firstSequence != null)
+            if (firstSequence != null && firstSequence.FoundBy != null)
             {
-                return firstSequence.FoundBy;
+                return firstSequence.FoundBy.Name;
             }
-            
             // If no SOS sequences but board is full, it's a draw
             return "Draw";
         }

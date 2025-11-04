@@ -1,7 +1,14 @@
+using System.Collections.Generic;
+using SOS_API.Models.Players;
+
 namespace SOS_API.Models.GameStates
 {
     public class GeneralGameState : BaseGameState
     {
+        public GeneralGameState(List<IPlayer> players) : base(players)
+        {
+        }
+
         public override GameMode Mode => GameMode.General;
 
         public override bool IsGameOver()
@@ -13,15 +20,13 @@ namespace SOS_API.Models.GameStates
         public override string DetermineWinner()
         {
             // In General mode, whoever has more SOS sequences wins
-            int player1Score = Scores["Player1"];
-            int player2Score = Scores["Player2"];
-
-            if (player1Score > player2Score)
-                return "Player1";
-            else if (player2Score > player1Score)
-                return "Player2";
-            else
+            if (Scores.Count == 0)
                 return "Draw";
+
+            var top = Scores.OrderByDescending(kvp => kvp.Value).ToList();
+            if (top.Count > 1 && top[0].Value == top[1].Value)
+                return "Draw";
+            return top[0].Key.Name;
         }
 
         public override bool PlayerGetsAnotherTurn(int newSequencesCount)
