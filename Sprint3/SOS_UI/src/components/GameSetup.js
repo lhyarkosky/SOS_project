@@ -5,6 +5,8 @@ import './GameSetup.css';
 const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
   const [boardSize, setBoardSize] = useState(5);
   const [gameMode, setGameMode] = useState('Simple');
+  const [player1Name, setPlayer1Name] = useState('');
+  const [player2Name, setPlayer2Name] = useState('');
 
   const createGame = async () => {
     setIsLoading(true);
@@ -17,7 +19,11 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
         },
         body: JSON.stringify({
           boardSize: boardSize,
-          gameMode: gameMode
+          gameMode: gameMode,
+          player1Name: player1Name || null,
+          player2Name: player2Name || null,
+          player1Type: "Human", //For now both players hard coded to be Human
+          player2Type: "Human"
         })
       });
 
@@ -66,6 +72,32 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
             <option value="Simple">Simple Game</option>
             <option value="General">General Game</option>
           </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="player1Name">Player 1 Name (optional):</label>
+          <input
+            type="text"
+            id="player1Name"
+            value={player1Name}
+            onChange={(e) => setPlayer1Name(e.target.value)}
+            placeholder="Player1"
+            maxLength="50"
+            disabled={isLoading}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="player2Name">Player 2 Name (optional):</label>
+          <input
+            type="text"
+            id="player2Name"
+            value={player2Name}
+            onChange={(e) => setPlayer2Name(e.target.value)}
+            placeholder="Player2"
+            maxLength="50"
+            disabled={isLoading}
+          />
         </div>
 
         <div className="game-mode-description">

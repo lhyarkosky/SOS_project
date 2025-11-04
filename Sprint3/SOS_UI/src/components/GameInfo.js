@@ -52,14 +52,12 @@ const GameInfo = ({ gameData, onNewGame }) => {
       <div className="scores-section">
         <h4>Scores</h4>
         <div className="scores">
-          <div className="score-item">
-            <span>🔵 Player 1:</span>
-            <span className="score">{gameData.scores?.Player1 || 0}</span>
-          </div>
-          <div className="score-item">
-            <span>🔴 Player 2:</span>
-            <span className="score">{gameData.scores?.Player2 || 0}</span>
-          </div>
+          {gameData.players && gameData.players.map((playerName, index) => (
+            <div key={playerName} className="score-item">
+              <span>{index === 0 ? '🔵' : '🔴'} {playerName}:</span>
+              <span className="score">{gameData.scores?.[playerName] || 0}</span>
+            </div>
+          ))}
         </div>
       </div>
 

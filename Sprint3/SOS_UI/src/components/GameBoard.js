@@ -137,7 +137,11 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
           if (!seq.positions || seq.positions.length < 2) return null;
           const start = getCellCenterPercent(seq.positions[0].row, seq.positions[0].col);
           const end = getCellCenterPercent(seq.positions[seq.positions.length - 1].row, seq.positions[seq.positions.length - 1].col);
-          const color = seq.foundBy === 'Player1' ? 'blue' : 'red';
+          
+          // Get color based on which player found the sequence
+          const playerIndex = gameData.players?.indexOf(seq.foundBy) ?? 0;
+          const color = playerIndex === 0 ? 'blue' : 'red';
+          
           return (
             <line
               key={idx}
