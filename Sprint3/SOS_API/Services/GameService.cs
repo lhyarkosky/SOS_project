@@ -19,7 +19,7 @@ namespace SOS_API.Services
                 var players = new List<IPlayer> { player1, player2 };
 
                 // Let the business logic and models handle their own validation
-                var game = Game.CreateGameState(gameMode, boardSize, players);
+                var game = GameEngine.CreateGameState(gameMode, boardSize, players);
                 
                 // Store in our dictionary
                 _games[game.GameId] = game;
@@ -30,7 +30,7 @@ namespace SOS_API.Services
                 // Convert ArgumentOutOfRangeException from SOS_Board to ArgumentException for API consistency
                 throw new ArgumentException(e.Message, e);
             }
-            // ArgumentException from Game.CreateGameState (invalid game mode) bubbles up as-is
+            // ArgumentException from GameEngine.CreateGameState (invalid game mode) bubbles up as-is
         }
 
         public (IGameState game, List<SOSSequence> newSequences) MakeMove(string gameId, int row, int col, char letter)
@@ -42,7 +42,7 @@ namespace SOS_API.Services
             try
             {
                 // Business logic layer: process the move - let domain exceptions bubble up
-                var (updatedGame, newSequences) = Game.ProcessMove(game, row, col, letter);
+                var (updatedGame, newSequences) = GameEngine.ProcessMove(game, row, col, letter);
                 
                 // Service layer: update storage
                 _games[gameId] = updatedGame;

@@ -7,7 +7,7 @@ using SOS_API.Models.GameStates;
 
 namespace SOS_API.BusinessLogic
 {
-    public static class Game
+    public static class GameEngine
     {
         // create game state based on mode, boardSize, and players
         public static IGameState CreateGameState(string gameMode, int boardSize, List<IPlayer> players)
