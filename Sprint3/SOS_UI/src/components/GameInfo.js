@@ -53,11 +53,11 @@ const GameInfo = ({ gameData, onNewGame }) => {
         <h4>Scores</h4>
         <div className="scores">
           <div className="score-item">
-            <span>Player 1:</span>
+            <span>🔵 Player 1:</span>
             <span className="score">{gameData.scores?.Player1 || 0}</span>
           </div>
           <div className="score-item">
-            <span>Player 2:</span>
+            <span>🔴 Player 2:</span>
             <span className="score">{gameData.scores?.Player2 || 0}</span>
           </div>
         </div>
