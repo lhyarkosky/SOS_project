@@ -1,15 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using SOS_API.Models.Players;
 
 namespace SOS_API.Models.DTOs
 {
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum PlayerType
-    {
-        Human,
-        Computer
-    }
-
     public class CreateGameRequest
     {
         [Required]
