@@ -9,6 +9,7 @@ using SOS_API.Models.Players;
 using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace SOS_API.Tests
 {
@@ -497,7 +498,7 @@ namespace SOS_API.Tests
             TearDown();
         }
 
-        // AC 9.2 <simple game ends in tie>
+        // AC 9.2
         [Test]
         public void SimpleGame_WhenBoardFullWithNoSOSSequences_GameEndsInDraw()
         {
@@ -529,6 +530,7 @@ namespace SOS_API.Tests
             TearDown();
         }
 
+        // AC 11.1
         [Test]
         public void GeneralGame_WhenBoardFullWithHigherScore_GameEndsWithCorrectWinner()
         {
@@ -557,16 +559,17 @@ namespace SOS_API.Tests
             var finalGame = _gameService.GetGame(gameId);
             Assert.AreEqual(GameStatus.Finished, finalGame.Status);
             Assert.IsNotNull(finalGame.Winner);
-            Assert.IsTrue(finalGame.CompletedSequences.Count > 0);
+            Assert.AreEqual("Alice", finalGame.Winner.Name);
             TearDown();
         }
 
+        // AC 11.2
         [Test]
         public void GeneralGame_WhenBoardFullWithSameScore_GameEndsInDraw()
         {
-            var createRequest = new CreateGameRequest 
-            { 
-                BoardSize = 3, 
+            var createRequest = new CreateGameRequest
+            {
+                BoardSize = 3,
                 GameMode = "General",
                 Player1Name = "Carol",
                 Player2Name = "Dave",
@@ -575,7 +578,7 @@ namespace SOS_API.Tests
             };
             _controller.CreateGame(createRequest);
             var gameId = _gameService.GetAllGames().First().GameId;
-            
+
             for (int row = 0; row < 3; row++)
             {
                 for (int col = 0; col < 3; col++)
@@ -583,11 +586,107 @@ namespace SOS_API.Tests
                     _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = 'O' });
                 }
             }
-            
+
             var finalGame = _gameService.GetGame(gameId);
             Assert.AreEqual(GameStatus.Finished, finalGame.Status);
             Assert.AreEqual("Draw", finalGame.DetermineWinner());
             Assert.AreEqual(0, finalGame.CompletedSequences.Count);
+            TearDown();
+        }
+
+
+
+
+
+        // AC 16.1
+        [Test]
+        public void SimpleGame_WhenMoveDoesNotEndGame_TurnSwitchesToOtherPlayer()
+        {
+            var createRequest = new CreateGameRequest 
+            { 
+                BoardSize = 3, 
+                GameMode = "Simple",
+                Player1Name = "Alice",
+                Player2Name = "Bob",
+                Player1Type = PlayerType.Human,
+                Player2Type = PlayerType.Human
+            };
+            _controller.CreateGame(createRequest);
+            var gameId = _gameService.GetAllGames().First().GameId;
+            
+            var initialGame = _gameService.GetGame(gameId);
+            var firstPlayer = initialGame.CurrentPlayer.Name;
+            
+            _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 0, Letter = 'S' });
+            
+            var gameAfterMove = _gameService.GetGame(gameId);
+            Assert.AreEqual(GameStatus.InProgress, gameAfterMove.Status);
+            Assert.AreNotEqual(firstPlayer, gameAfterMove.CurrentPlayer.Name);
+            TearDown();
+        }
+
+
+        // AC 17.1
+        [Test]
+        public void GeneralGame_WhenMoveDoesNotCreateSequence_TurnSwitchesToOtherPlayer()
+        {
+            var createRequest = new CreateGameRequest 
+            { 
+                BoardSize = 3, 
+                GameMode = "General",
+                Player1Name = "Eve",
+                Player2Name = "Frank",
+                Player1Type = PlayerType.Human,
+                Player2Type = PlayerType.Human
+            };
+            _controller.CreateGame(createRequest);
+            var gameId = _gameService.GetAllGames().First().GameId;
+            
+            var initialGame = _gameService.GetGame(gameId);
+            var firstPlayer = initialGame.CurrentPlayer.Name;
+            
+            _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 0, Letter = 'S' });
+            
+            var gameAfterMove = _gameService.GetGame(gameId);
+            Assert.AreEqual(GameStatus.InProgress, gameAfterMove.Status);
+            Assert.AreEqual(0, gameAfterMove.CompletedSequences.Count);
+            Assert.AreNotEqual(firstPlayer, gameAfterMove.CurrentPlayer.Name);
+            TearDown();
+        }
+
+
+
+        // AC 17.2
+        [Test]
+        public void GeneralGame_WhenMoveCreatesSequence_SamePlayerGetsAnotherTurn()
+        {
+            var createRequest = new CreateGameRequest 
+            { 
+                BoardSize = 3, 
+                GameMode = "General",
+                Player1Name = "Grace",
+                Player2Name = "Henry",
+                Player1Type = PlayerType.Human,
+                Player2Type = PlayerType.Human
+            };
+            _controller.CreateGame(createRequest);
+            var gameId = _gameService.GetAllGames().First().GameId;
+            
+            var setupMoves = new[] { ('S', 0, 0), ('O', 0, 1) };
+            foreach (var (letter, row, col) in setupMoves)
+            {
+                _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
+            }
+            
+            var gameBeforeWinningMove = _gameService.GetGame(gameId);
+            var currentPlayer = gameBeforeWinningMove.CurrentPlayer.Name;
+            
+            _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 2, Letter = 'S' });
+            
+            var gameAfterWinningMove = _gameService.GetGame(gameId);
+            Assert.AreEqual(GameStatus.InProgress, gameAfterWinningMove.Status);
+            Assert.AreEqual(1, gameAfterWinningMove.CompletedSequences.Count);
+            Assert.AreEqual(currentPlayer, gameAfterWinningMove.CurrentPlayer.Name);
             TearDown();
         }
 
