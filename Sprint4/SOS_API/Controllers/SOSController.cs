@@ -9,10 +9,19 @@ namespace SOS_API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class SOSController(IGameService _gameService) : ControllerBase
     {
-        // Create a new SOS game
+        /// <summary>
+        /// Creates a new SOS game with specified settings
+        /// </summary>
+        /// <param name="request">Game configuration including board size, game mode, and player details</param>
+        /// <returns>The newly created game state</returns>
+        /// <response code="200">Game created successfully</response>
+        /// <response code="500">An error occurred during game creation</response>
         [HttpPost("create")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<object> CreateGame([FromBody] CreateGameRequest request)
         {
             try
@@ -41,8 +50,16 @@ namespace SOS_API.Controllers
             };
         }
 
-        // Make a move in the game
+        /// <summary>
+        /// Makes a move in an existing game
+        /// </summary>
+        /// <param name="request">Move details including game ID, position (row, col), and letter (S or O)</param>
+        /// <returns>Updated game state and information about any SOS sequences formed</returns>
+        /// <response code="200">Move executed successfully</response>
+        /// <response code="500">An error occurred during move execution</response>
         [HttpPost("move")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<object> MakeMove([FromBody] MakeMoveRequest request)
         {
             try
@@ -67,8 +84,18 @@ namespace SOS_API.Controllers
             }
         }
 
-        // Get game state by ID
+        /// <summary>
+        /// Retrieves the current state of a specific game
+        /// </summary>
+        /// <param name="gameId">Unique identifier of the game</param>
+        /// <returns>Current game state including board, players, and scores</returns>
+        /// <response code="200">Game found and returned successfully</response>
+        /// <response code="404">Game not found</response>
+        /// <response code="500">An error occurred while retrieving the game</response>
         [HttpGet("{gameId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<object> GetGame(string gameId)
         {
             try
@@ -88,8 +115,18 @@ namespace SOS_API.Controllers
             }
         }
 
-        // Delete a game
+        /// <summary>
+        /// Deletes a game by its ID
+        /// </summary>
+        /// <param name="gameId">Unique identifier of the game to delete</param>
+        /// <returns>Confirmation message</returns>
+        /// <response code="200">Game deleted successfully</response>
+        /// <response code="404">Game not found</response>
+        /// <response code="500">An error occurred while deleting the game</response>
         [HttpDelete("{gameId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<object> DeleteGame(string gameId)
         {
             try
@@ -109,8 +146,15 @@ namespace SOS_API.Controllers
             }
         }
 
-        // Get all games (for debugging/admin purposes)
+        /// <summary>
+        /// Retrieves all active games (for debugging/admin purposes)
+        /// </summary>
+        /// <returns>List of all game states</returns>
+        /// <response code="200">Games retrieved successfully</response>
+        /// <response code="500">An error occurred while retrieving games</response>
         [HttpGet("all")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<object> GetAllGames()
         {
             try
@@ -125,8 +169,16 @@ namespace SOS_API.Controllers
             }
         }
 
-        // Clean up old games
+        /// <summary>
+        /// Cleans up games older than the specified number of hours
+        /// </summary>
+        /// <param name="hoursOld">Number of hours (default: 24). Games older than this will be deleted</param>
+        /// <returns>Number of games cleaned up</returns>
+        /// <response code="200">Cleanup completed successfully</response>
+        /// <response code="500">An error occurred during cleanup</response>
         [HttpPost("cleanup")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<object> CleanupOldGames([FromQuery] int hoursOld = 24)
         {
             try
