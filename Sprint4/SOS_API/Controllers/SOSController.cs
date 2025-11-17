@@ -9,17 +9,8 @@ namespace SOS_API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class SOSController : ControllerBase
+    public class SOSController(IGameService _gameService) : ControllerBase
     {
-        private readonly IGameService _gameService;
-
-        public SOSController(IGameService gameService)
-        {
-            _gameService = gameService;
-        }
-
-
-
         // Create a new SOS game
         [HttpPost("create")]
         public ActionResult<object> CreateGame([FromBody] CreateGameRequest request)
