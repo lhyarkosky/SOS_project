@@ -1,0 +1,56 @@
+.game-setup {
+  border: 1px solid #ccc;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.game-setup h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: bold;
+}
+
+.form-group select {
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+
+.form-group select:disabled {
+  background-color: #f5f5f5;
+}
+
+.game-mode-description {
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.game-mode-description p {
+  margin: 0;
+}
+
+.create-button {
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.create-button:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
