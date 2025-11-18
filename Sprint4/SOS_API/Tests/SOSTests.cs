@@ -10,6 +10,7 @@ using System.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SOS_API.Tests
 {
@@ -162,7 +163,7 @@ namespace SOS_API.Tests
         // AC 5.1 will be a UI test (im considering playwright)
         // AC 5.2
         [Test]
-        public void CreateGame_WithSimpleGameMode_CreatesSimpleGameState()
+        public async Task CreateGame_WithSimpleGameMode_CreatesSimpleGameState()
         {
             var request = new CreateGameRequest 
             { 
@@ -175,14 +176,14 @@ namespace SOS_API.Tests
             };
             var player1 = new HumanPlayer { Name = "Player1" };
             var player2 = new HumanPlayer { Name = "Player2" };
-            var gameState = _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
+            var (gameState, _) = await _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
             Assert.IsInstanceOf<SimpleGameState>(gameState);
             TearDown();
         }
 
         // AC 5.3
         [Test]
-        public void CreateGame_WithGeneralGameMode_CreatesGeneralGameState()
+        public async Task CreateGame_WithGeneralGameMode_CreatesGeneralGameState()
         {
             var request = new CreateGameRequest 
             { 
@@ -195,7 +196,7 @@ namespace SOS_API.Tests
             };
             var player1 = new HumanPlayer { Name = "Player1" };
             var player2 = new HumanPlayer { Name = "Player2" };
-            var gameState = _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
+            var (gameState, _) = await _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
             Assert.IsInstanceOf<GeneralGameState>(gameState);
             TearDown();
         }
@@ -308,7 +309,7 @@ namespace SOS_API.Tests
         // AC 8.1 & 8.3 will be a UI tests
         // AC 8.3 <valid move placement>
         [Test]
-        public void MakeMove_WithSelectedLetterSOnEmptyCell_PlacesLetterSuccessfully()
+        public async Task MakeMove_WithSelectedLetterSOnEmptyCell_PlacesLetterSuccessfully()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -335,12 +336,12 @@ namespace SOS_API.Tests
                 Letter = 'S' 
             };
 
-            // Make a move on empty cell
-            var moveResult = _controller.MakeMove(moveRequest);
+            // Make a move on an empty cell
+            var moveResult = await _controller.MakeMove(moveRequest);
 
             // Move should be successful
-            Assert.IsInstanceOf<OkObjectResult>(moveResult.Result);
-            var moveOkResult = moveResult.Result as OkObjectResult;
+            Assert.IsInstanceOf<OkObjectResult>(moveResult);
+            var moveOkResult = moveResult as OkObjectResult;
             Assert.IsNotNull(moveOkResult);
             if (moveOkResult != null)
             {
@@ -357,7 +358,7 @@ namespace SOS_API.Tests
         }
 
         [Test]
-        public void MakeMove_WithSelectedLetterOOnEmptyCell_PlacesLetterSuccessfully()
+        public async Task MakeMove_WithSelectedLetterOOnEmptyCell_PlacesLetterSuccessfully()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -384,11 +385,11 @@ namespace SOS_API.Tests
             };
 
             // Make a move on an empty cell
-            var moveResult = _controller.MakeMove(moveRequest);
+            var moveResult = await _controller.MakeMove(moveRequest);
 
             // Move should be successful
-            Assert.IsInstanceOf<OkObjectResult>(moveResult.Result);
-            var moveOkResult = moveResult.Result as OkObjectResult;
+            Assert.IsInstanceOf<OkObjectResult>(moveResult);
+            var moveOkResult = moveResult as OkObjectResult;
             Assert.IsNotNull(moveOkResult);
             if (moveOkResult != null)
             {
@@ -408,7 +409,7 @@ namespace SOS_API.Tests
 
         // AC 8.4 <invalid move prevention>
         [Test]
-        public void MakeMove_OnOccupiedCell_ThrowsInvalidOperationException()
+        public async Task MakeMove_OnOccupiedCell_ThrowsInvalidOperationException()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -434,7 +435,7 @@ namespace SOS_API.Tests
                 Col = 0, 
                 Letter = 'S' 
             };
-            _controller.MakeMove(firstMoveRequest);
+            await _controller.MakeMove(firstMoveRequest);
             
             // Second move - try to overwrite the same cell
             var secondMoveRequest = new MakeMoveRequest 
@@ -446,8 +447,8 @@ namespace SOS_API.Tests
             };
 
             // Should return HTTP 500 with InvalidOperationException message
-            var result = _controller.MakeMove(secondMoveRequest);
-            var statusResult = result.Result as ObjectResult;
+            var result = await _controller.MakeMove(secondMoveRequest);
+            var statusResult = result as ObjectResult;
             Assert.IsNotNull(statusResult);
             if (statusResult != null)
             {
@@ -471,7 +472,7 @@ namespace SOS_API.Tests
 
         // AC 9.1
         [Test]
-        public void SimpleGame_WhenPlayerCompletesSOSSequence_GameEndsWithCorrectWinner()
+        public async Task SimpleGame_WhenPlayerCompletesSOSSequence_GameEndsWithCorrectWinner()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -488,7 +489,7 @@ namespace SOS_API.Tests
             var moves = new[] { ('S', 0, 0), ('O', 0, 1), ('S', 0, 2) };
             foreach (var (letter, row, col) in moves)
             {
-                _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
+                await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
             }
             
             var finalGame = _gameService.GetGame(gameId);
@@ -500,7 +501,7 @@ namespace SOS_API.Tests
 
         // AC 9.2
         [Test]
-        public void SimpleGame_WhenBoardFullWithNoSOSSequences_GameEndsInDraw()
+        public async Task SimpleGame_WhenBoardFullWithNoSOSSequences_GameEndsInDraw()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -519,7 +520,7 @@ namespace SOS_API.Tests
             {
                 for (int col = 0; col < 3; col++)
                 {
-                    _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = 'S' });
+                    await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = 'S' });
                 }
             }
             
@@ -532,7 +533,7 @@ namespace SOS_API.Tests
 
         // AC 11.1
         [Test]
-        public void GeneralGame_WhenBoardFullWithHigherScore_GameEndsWithCorrectWinner()
+        public async Task GeneralGame_WhenBoardFullWithHigherScore_GameEndsWithCorrectWinner()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -553,7 +554,7 @@ namespace SOS_API.Tests
             };
             foreach (var (letter, row, col) in moves)
             {
-                _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
+                await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
             }
             
             var finalGame = _gameService.GetGame(gameId);
@@ -565,7 +566,7 @@ namespace SOS_API.Tests
 
         // AC 11.2
         [Test]
-        public void GeneralGame_WhenBoardFullWithSameScore_GameEndsInDraw()
+        public async Task GeneralGame_WhenBoardFullWithSameScore_GameEndsInDraw()
         {
             var createRequest = new CreateGameRequest
             {
@@ -583,7 +584,7 @@ namespace SOS_API.Tests
             {
                 for (int col = 0; col < 3; col++)
                 {
-                    _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = 'O' });
+                    await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = 'O' });
                 }
             }
 
@@ -600,7 +601,7 @@ namespace SOS_API.Tests
 
         // AC 16.1
         [Test]
-        public void SimpleGame_WhenMoveDoesNotEndGame_TurnSwitchesToOtherPlayer()
+        public async Task SimpleGame_WhenMoveDoesNotEndGame_TurnSwitchesToOtherPlayer()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -617,7 +618,7 @@ namespace SOS_API.Tests
             var initialGame = _gameService.GetGame(gameId);
             var firstPlayer = initialGame.CurrentPlayer.Name;
             
-            _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 0, Letter = 'S' });
+            await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 0, Letter = 'S' });
             
             var gameAfterMove = _gameService.GetGame(gameId);
             Assert.AreEqual(GameStatus.InProgress, gameAfterMove.Status);
@@ -628,7 +629,7 @@ namespace SOS_API.Tests
 
         // AC 17.1
         [Test]
-        public void GeneralGame_WhenMoveDoesNotCreateSequence_TurnSwitchesToOtherPlayer()
+        public async Task GeneralGame_WhenMoveDoesNotCreateSequence_TurnSwitchesToOtherPlayer()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -645,7 +646,7 @@ namespace SOS_API.Tests
             var initialGame = _gameService.GetGame(gameId);
             var firstPlayer = initialGame.CurrentPlayer.Name;
             
-            _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 0, Letter = 'S' });
+            await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 0, Letter = 'S' });
             
             var gameAfterMove = _gameService.GetGame(gameId);
             Assert.AreEqual(GameStatus.InProgress, gameAfterMove.Status);
@@ -658,7 +659,7 @@ namespace SOS_API.Tests
 
         // AC 17.2
         [Test]
-        public void GeneralGame_WhenMoveCreatesSequence_SamePlayerGetsAnotherTurn()
+        public async Task GeneralGame_WhenMoveCreatesSequence_SamePlayerGetsAnotherTurn()
         {
             var createRequest = new CreateGameRequest 
             { 
@@ -675,13 +676,13 @@ namespace SOS_API.Tests
             var setupMoves = new[] { ('S', 0, 0), ('O', 0, 1) };
             foreach (var (letter, row, col) in setupMoves)
             {
-                _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
+                await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = row, Col = col, Letter = letter });
             }
             
             var gameBeforeWinningMove = _gameService.GetGame(gameId);
             var currentPlayer = gameBeforeWinningMove.CurrentPlayer.Name;
             
-            _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 2, Letter = 'S' });
+            await _controller.MakeMove(new MakeMoveRequest { GameId = gameId, Row = 0, Col = 2, Letter = 'S' });
             
             var gameAfterWinningMove = _gameService.GetGame(gameId);
             Assert.AreEqual(GameStatus.InProgress, gameAfterWinningMove.Status);
