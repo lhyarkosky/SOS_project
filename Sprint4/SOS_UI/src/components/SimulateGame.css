@@ -1,0 +1,135 @@
+.simulate-game-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.simulation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.simulation-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.simulation-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.simulation-controls button {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.simulation-controls button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.simulation-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.simulation-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.move-counter, .current-player, .scores {
+  font-weight: bold;
+}
+
+.scores {
+  display: flex;
+  gap: 15px;
+}
+
+.score {
+  color: #666;
+}
+
+.current-move-info {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #e8f4fd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.game-board {
+  display: grid;
+  gap: 2px;
+  background: #333;
+  border: 2px solid #333;
+  margin: 20px 0;
+  position: relative;
+}
+
+.cell {
+  aspect-ratio: 1;
+  background: white;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.cell.occupied {
+  background: #f8f9fa;
+}
+
+.cell.letter-s {
+  color: black;
+}
+
+.cell.letter-o {
+  color: black;
+}
+
+.cell-coordinates {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+  color: #999;
+}
+
+.simulation-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.game-result {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.game-result h4 {
+  margin: 0 0 10px 0;
+  color: #28a745;
+}
+
+.game-result p {
+  margin: 5px 0;
+  font-weight: bold;
+}

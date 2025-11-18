@@ -7,6 +7,8 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
   const [gameMode, setGameMode] = useState('Simple');
   const [player1Name, setPlayer1Name] = useState('');
   const [player2Name, setPlayer2Name] = useState('');
+  const [player1Type, setPlayer1Type] = useState('Human');
+  const [player2Type, setPlayer2Type] = useState('Human');
 
   const createGame = async () => {
     setIsLoading(true);
@@ -22,8 +24,8 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
           gameMode: gameMode,
           player1Name: player1Name || null,
           player2Name: player2Name || null,
-          player1Type: "Human", //For now both players hard coded to be Human
-          player2Type: "Human"
+          player1Type: player1Type,
+          player2Type: player2Type
         })
       });
 
@@ -33,7 +35,7 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
       }
 
       const gameData = await response.json();
-      onGameCreated(gameData);
+      onGameCreated(gameData, { player1Type, player2Type });
     } catch (error) {
       console.error('Error creating game:', error);
       onError(error.message);
@@ -88,6 +90,34 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
         </div>
 
         <div className="form-group">
+          <label>Player 1:</label>
+          <div className="player-type">
+            <label>
+              <input
+                type="radio"
+                name="player1Type"
+                value="Human"
+                checked={player1Type === 'Human'}
+                onChange={(e) => setPlayer1Type(e.target.value)}
+                disabled={isLoading}
+              />
+              Human
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="player1Type"
+                value="Computer"
+                checked={player1Type === 'Computer'}
+                onChange={(e) => setPlayer1Type(e.target.value)}
+                disabled={isLoading}
+              />
+              AI
+            </label>
+          </div>
+        </div>
+
+        <div className="form-group">
           <label htmlFor="player2Name">Player 2 Name (optional):</label>
           <input
             type="text"
@@ -98,6 +128,34 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
             maxLength="50"
             disabled={isLoading}
           />
+        </div>
+
+        <div className="form-group">
+          <label>Player 2:</label>
+          <div className="player-type">
+            <label>
+              <input
+                type="radio"
+                name="player2Type"
+                value="Human"
+                checked={player2Type === 'Human'}
+                onChange={(e) => setPlayer2Type(e.target.value)}
+                disabled={isLoading}
+              />
+              Human
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="player2Type"
+                value="Computer"
+                checked={player2Type === 'Computer'}
+                onChange={(e) => setPlayer2Type(e.target.value)}
+                disabled={isLoading}
+              />
+              AI
+            </label>
+          </div>
         </div>
 
         <div className="game-mode-description">

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import GameService from '../services/GameService';
 import './GameBoard.css';
 
-const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
+const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading, onShowSimulation, isAiVsAi }) => {
   const [selectedLetter, setSelectedLetter] = useState('S');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!gameData || !gameData.board) {
     return <div className="loading">Loading game board...</div>;
@@ -13,6 +14,8 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
   const cells = gameData.board.cells || {};
 
   const makeMove = async (row, col) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     setIsLoading(true);
 
     try {
@@ -30,27 +33,20 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
       });
 
       if (!response.ok) {
-        const errorMessage = await GameService.getErrorMessage(response,  response.status);
+        const errorMessage = await GameService.getErrorMessage(response, response.status);
         onError(errorMessage);
         return;
       }
 
       const moveResult = await response.json();
       
-      // Update the game data with the new state
       onGameUpdate(moveResult.game);
-
-      // Show success message if SOS was formed
-      if (moveResult.sosFormed) {
-        // You could add a toast notification here
-        console.log(`SOS formed: ${moveResult.message}`);
-      }
-
     } catch (error) {
       console.error('Error making move:', error);
       const errorMessage = await GameService.getErrorMessage(null, 'Network error occurred');
       onError(errorMessage);
     } finally {
+      setIsProcessing(false);
       setIsLoading(false);
     }
   };
@@ -69,7 +65,7 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
     
     if (isOccupied) {
       className += ' occupied';
-    } else if (!isGameFinished) {
+    } else if (!isGameFinished && !isProcessing) {
       className += ' clickable';
     }
 
@@ -84,11 +80,12 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
     const grid = [];
     for (let row = 0; row < boardSize; row++) {
       for (let col = 0; col < boardSize; col++) {
+        const isGameFinished = gameData.status?.toLowerCase() === 'finished';
         grid.push(
           <div
             key={`${row}-${col}`}
             className={getCellClass(row, col)}
-            onClick={() => makeMove(row, col)}
+            onClick={isGameFinished || isProcessing ? undefined : () => makeMove(row, col)}
             data-row={row}
             data-col={col}
           >
@@ -105,7 +102,6 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
     return grid;
   };
 
-
   // Get the center of a cell in percent (relative to board)
   const getCellCenterPercent = (row, col) => {
     const step = 100 / boardSize;
@@ -115,9 +111,10 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
     };
   };
 
-  // Render SVG lines for completed sequences (using positions and foundBy)
+  // Render SVG lines for completed sequences
   const renderSequenceLines = () => {
-    if (!gameData.completedSequences) return null;
+    const sequences = gameData.completedSequences;
+    if (!sequences) return null;
     return (
       <svg
         className="sos-overlay"
@@ -133,7 +130,7 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
         }}
         preserveAspectRatio="none"
       >
-        {gameData.completedSequences.map((seq, idx) => {
+        {sequences.map((seq, idx) => {
           if (!seq.positions || seq.positions.length < 2) return null;
           const start = getCellCenterPercent(seq.positions[0].row, seq.positions[0].col);
           const end = getCellCenterPercent(seq.positions[seq.positions.length - 1].row, seq.positions[seq.positions.length - 1].col);
@@ -164,25 +161,37 @@ const GameBoard = ({ game, gameData, onGameUpdate, onError, setIsLoading }) => {
     <div className="game-board-container">
       <div className="board-header">
         <h3>Game Board</h3>
-        {gameData.status?.toLowerCase() === 'inprogress' && (
-          <div className="letter-selector">
-            <span className="selector-label">Choose letter:</span>
-            <div className="letter-buttons">
-              <button
-                className={`letter-button ${selectedLetter === 'S' ? 'selected' : ''}`}
-                onClick={() => setSelectedLetter('S')}
-              >
-                S
-              </button>
-              <button
-                className={`letter-button ${selectedLetter === 'O' ? 'selected' : ''}`}
-                onClick={() => setSelectedLetter('O')}
-              >
-                O
-              </button>
+        <div className="board-controls">
+          {isAiVsAi && (
+            <button 
+              className="simulation-button"
+              onClick={onShowSimulation}
+            >
+              Play Simulation
+            </button>
+          )}
+          {gameData.status?.toLowerCase() === 'inprogress' && (
+            <div className="letter-selector">
+              <span className="selector-label">Choose letter:</span>
+              <div className="letter-buttons">
+                <button
+                  className={`letter-button ${selectedLetter === 'S' ? 'selected' : ''}`}
+                  onClick={() => setSelectedLetter('S')}
+                  disabled={isProcessing}
+                >
+                  S
+                </button>
+                <button
+                  className={`letter-button ${selectedLetter === 'O' ? 'selected' : ''}`}
+                  onClick={() => setSelectedLetter('O')}
+                  disabled={isProcessing}
+                >
+                  O
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div 
