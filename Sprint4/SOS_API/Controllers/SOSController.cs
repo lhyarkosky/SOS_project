@@ -196,5 +196,25 @@ namespace SOS_API.Controllers
                 return StatusCode(500, $"An error occurred while cleaning up games: {e.Message}");
             }
         }
+
+        /// <summary>
+        /// Returns the full move history for a game
+        /// </summary>
+        /// <param name="gameId">Unique identifier of the game</param>
+        /// <returns>List of all moves made in the game</returns>
+        /// <response code="200">Move history returned successfully</response>
+        /// <response code="404">Game not found</response>
+        [HttpGet("{gameId}/moveHistory")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<object> GetMoveHistory(string gameId)
+        {
+            var game = _gameService.GetGame(gameId);
+            if (game == null)
+            {
+                return NotFound("Game not found");
+            }
+            return Ok(game.MoveHistory ?? new List<object>());
+        }
     }
 }

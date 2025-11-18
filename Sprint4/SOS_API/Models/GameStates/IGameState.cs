@@ -29,6 +29,7 @@ namespace SOS_API.Models.GameStates
         DateTime CreatedAt { get; set; }
         DateTime LastMoveAt { get; set; }
         List<IPlayer> Players { get; set; }
+        List<object> MoveHistory { get; set; }
 
         bool IsGameOver();
         string DetermineWinner();

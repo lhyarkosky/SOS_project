@@ -15,7 +15,7 @@ namespace SOS_API.Models.Players
         // Delegates move selection to BusinessLogic layer
         public (int row, int col, char letter) MakeMove(SOS_Board board)
         {
-            return BusinessLogic.AIMoveLogic.GetMove(board);
+            return BusinessLogic.AIMoveLogic.GetMove(board, this);
         }
     }
 }

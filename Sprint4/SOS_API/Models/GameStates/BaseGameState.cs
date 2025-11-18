@@ -18,6 +18,7 @@ namespace SOS_API.Models.GameStates
         public DateTime CreatedAt { get; set; }
         public DateTime LastMoveAt { get; set; }
         public List<IPlayer> Players { get; set; }
+        public List<object> MoveHistory { get; set; }
 
         protected BaseGameState(List<IPlayer> players)
         {
@@ -27,6 +28,7 @@ namespace SOS_API.Models.GameStates
             Players = players;
             CompletedSequences = new List<SOSSequence>();
             Scores = new Dictionary<IPlayer, int>();
+            MoveHistory = new List<object>();
             
             foreach (var player in players)
             {
