@@ -4,6 +4,8 @@ using SOS_API.Services;
 using SOS_API.Models.GameStates;
 using SOS_API.Models.Players;
 using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace SOS_API.Controllers
 {
@@ -22,7 +24,7 @@ namespace SOS_API.Controllers
         [HttpPost("create")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<object> CreateGame([FromBody] CreateGameRequest request)
+        public async Task<IActionResult> CreateGame([FromBody] CreateGameRequest request)
         {
             try
             {
@@ -30,9 +32,15 @@ namespace SOS_API.Controllers
                 var player1 = CreatePlayer(request.Player1Name ?? "Player1", request.Player1Type);
                 var player2 = CreatePlayer(request.Player2Name ?? "Player2", request.Player2Type);
                 
-                var game = _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
+                var (game, moves) = await _gameService.CreateGame(request.BoardSize, request.GameMode, player1, player2);
                 
-                return Ok(ApiUtilities.SerializeGameForApi(game));
+                var gameData = ApiUtilities.SerializeGameForApi(game);
+                
+                return Ok(new
+                {
+                    game = gameData,
+                    moves = moves
+                });
             }
             catch (Exception e)
             {
@@ -45,8 +53,8 @@ namespace SOS_API.Controllers
             return playerType switch
             {
                 PlayerType.Human => new HumanPlayer { Name = name },
-                PlayerType.Computer => throw new NotImplementedException("Computer players not yet implemented"),
-                _ => throw new ArgumentException($"Unknown player type: {playerType}")
+                PlayerType.Computer => new AIPlayer{ Name = name},
+                _ => throw new ArgumentException($"Unknown PlayerType: {playerType}")
             };
         }
 
@@ -60,22 +68,18 @@ namespace SOS_API.Controllers
         [HttpPost("move")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public ActionResult<object> MakeMove([FromBody] MakeMoveRequest request)
+        public async Task<IActionResult> MakeMove([FromBody] MakeMoveRequest request)
         {
             try
             {
-                var (game, newSequences) = _gameService.MakeMove(request.GameId, request.Row, request.Col, request.Letter);
+                var (game, moves) = await _gameService.MakeMove(request.GameId, request.Row, request.Col, request.Letter);
                 
                 var gameData = ApiUtilities.SerializeGameForApi(game);
                 
                 return Ok(new
                 {
                     game = gameData,
-                    sosFormed = newSequences.Count > 0,
-                    newSequencesCount = newSequences.Count,
-                    message = newSequences.Count > 0 
-                        ? $"Move successful! {newSequences.Count} SOS sequence(s) formed!"
-                        : "Move successful!"
+                    moves = moves
                 });
             }
             catch (Exception e)

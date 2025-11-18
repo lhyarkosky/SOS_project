@@ -12,7 +12,7 @@ namespace SOS_API.Services
     {
         private static Dictionary<string, IGameState> _games = new Dictionary<string, IGameState>(); // if this was a bigger project id use db rather than a dictionary, but this should suffice for now
 
-        public IGameState CreateGame(int boardSize, string gameMode, IPlayer player1, IPlayer player2)
+        public async Task<(IGameState game, List<object> moves)> CreateGame(int boardSize, string gameMode, IPlayer player1, IPlayer player2)
         {
             try
             {
@@ -23,7 +23,20 @@ namespace SOS_API.Services
                 
                 // Store in our dictionary
                 _games[game.GameId] = game;
-                return game;
+
+                // If the current player is AI, make the initial move
+                if (game.CurrentPlayer.IsComputer)
+                {
+                    var aiPlayer = game.CurrentPlayer as AIPlayer;
+                    if (aiPlayer != null)
+                    {
+                        var move = AIMoveLogic.GetMove(game.Board);
+                        var (updatedGame, moves) = await MakeMove(game.GameId, move.row, move.col, move.letter);
+                        return (updatedGame, moves);
+                    }
+                }
+
+                return (game, new List<object>());
             }
             catch (ArgumentOutOfRangeException e)
             {
@@ -33,7 +46,7 @@ namespace SOS_API.Services
             // ArgumentException from GameEngine.CreateGameState (invalid game mode) bubbles up as-is
         }
 
-        public (IGameState game, List<SOSSequence> newSequences) MakeMove(string gameId, int row, int col, char letter)
+        public (IGameState game, List<SOSSequence> newSequences) ApplyMove(string gameId, int row, int col, char letter)
         {
             // Service layer: handle game retrieval
             if (!_games.TryGetValue(gameId, out IGameState? game))
@@ -83,6 +96,49 @@ namespace SOS_API.Services
             }
 
             return gamesToRemove.Count;
+        }
+
+        // Handles a human move and automatically processes AI moves if needed
+        public async Task<(IGameState game, List<object> moves)> MakeMove(string gameId, int row, int col, char letter)
+        {
+            var moves = new List<object>();
+            var (game, newSequences) = ApplyMove(gameId, row, col, letter);
+            moves.Add(new
+            {
+                player = game.CurrentPlayer.Name,
+                isAI = game.CurrentPlayer.IsComputer,
+                move = new { row, col, letter },
+                sosFormed = newSequences.Count > 0,
+                newSequencesCount = newSequences.Count,
+                newSequences = newSequences.Select(s => new { positions = s.Positions, foundBy = s.FoundBy }).ToList(),
+                message = newSequences.Count > 0
+                    ? $"Move successful! {newSequences.Count} SOS sequence(s) formed!"
+                    : "Move successful!"
+            });
+
+            // After human move, process AI moves if needed
+            while (game.Status == GameStatus.InProgress && game.CurrentPlayer.IsComputer)
+            {
+                var aiPlayer = game.CurrentPlayer as AIPlayer;
+                if (aiPlayer == null)
+                    break;
+                var aiMove = AIMoveLogic.GetMove(game.Board);
+                var (aiGame, aiSequences) = ApplyMove(game.GameId, aiMove.row, aiMove.col, aiMove.letter);
+                game = aiGame;
+                moves.Add(new
+                {
+                    player = aiPlayer.Name,
+                    isAI = true,
+                    move = new { aiMove.row, aiMove.col, aiMove.letter },
+                    sosFormed = aiSequences.Count > 0,
+                    newSequencesCount = aiSequences.Count,
+                    newSequences = aiSequences.Select(s => new { positions = s.Positions, foundBy = s.FoundBy }).ToList(),
+                    message = aiSequences.Count > 0
+                        ? $"AI move successful! {aiSequences.Count} SOS sequence(s) formed!"
+                        : "AI move successful!"
+                });
+            }
+            return (game, moves);
         }
     }
 }
