@@ -24,19 +24,38 @@ namespace SOS_API.Services
                 // Store in our dictionary
                 _games[game.GameId] = game;
 
-                // If the current player is AI, make the initial move
-                if (game.CurrentPlayer.IsComputer)
+                var allMoves = new List<object>();
+
+                // If the current player is AI, make moves until no more AI or game over
+                while (game.Status == GameStatus.InProgress && game.CurrentPlayer.IsComputer)
                 {
-                    var aiPlayer = game.CurrentPlayer as AIPlayer;
-                    if (aiPlayer != null)
+                    var movePlayer = game.CurrentPlayer;
+                    var aiPlayer = movePlayer as AIPlayer;
+                    if (aiPlayer == null)
+                        break;
+                    var move = aiPlayer.MakeMove(game.Board);
+                    var (updatedGame, newSequences) = ApplyMove(game.GameId, move.row, move.col, move.letter);
+                    game = updatedGame;
+                    var moveObj = new
                     {
-                        var move = AIMoveLogic.GetMove(game.Board);
-                        var (updatedGame, moves) = await MakeMove(game.GameId, move.row, move.col, move.letter);
-                        return (updatedGame, moves);
-                    }
+                        player = movePlayer.Name,
+                        isAI = movePlayer.IsComputer,
+                        move = new { move.row, move.col, move.letter },
+                        sosFormed = newSequences.Count > 0,
+                        newSequencesCount = newSequences.Count,
+                        newSequences = newSequences.Select(s => new {
+                            positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
+                            foundBy = s.FoundBy
+                        }).ToList(),
+                        message = newSequences.Count > 0
+                            ? $"AI move successful! {newSequences.Count} SOS sequence(s) formed!"
+                            : "AI move successful!"
+                    };
+                    allMoves.Add(moveObj);
+                    game.MoveHistory.Add(moveObj);
                 }
 
-                return (game, new List<object>());
+                return (game, allMoves);
             }
             catch (ArgumentOutOfRangeException e)
             {
@@ -102,41 +121,60 @@ namespace SOS_API.Services
         public async Task<(IGameState game, List<object> moves)> MakeMove(string gameId, int row, int col, char letter)
         {
             var moves = new List<object>();
-            var (game, newSequences) = ApplyMove(gameId, row, col, letter);
-            moves.Add(new
+            // Capture the player before the move is processed
+            var game = _games.TryGetValue(gameId, out IGameState? g) ? g : null;
+            var movePlayer = game?.CurrentPlayer;
+            var isAI = movePlayer?.IsComputer ?? false;
+            var playerName = movePlayer?.Name ?? "Unknown";
+
+            var (updatedGame, newSequences) = ApplyMove(gameId, row, col, letter);
+            game = updatedGame;
+
+            var moveObj = new
             {
-                player = game.CurrentPlayer.Name,
-                isAI = game.CurrentPlayer.IsComputer,
+                player = playerName,
+                isAI = isAI,
                 move = new { row, col, letter },
                 sosFormed = newSequences.Count > 0,
                 newSequencesCount = newSequences.Count,
-                newSequences = newSequences.Select(s => new { positions = s.Positions, foundBy = s.FoundBy }).ToList(),
+                newSequences = newSequences.Select(s => new {
+                    positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
+                    foundBy = s.FoundBy
+                }).ToList(),
                 message = newSequences.Count > 0
                     ? $"Move successful! {newSequences.Count} SOS sequence(s) formed!"
                     : "Move successful!"
-            });
+            };
+            moves.Add(moveObj);
+            game.MoveHistory.Add(moveObj);
 
-            // After human move, process AI moves if needed
+            // After human/AI move, process AI moves if needed
             while (game.Status == GameStatus.InProgress && game.CurrentPlayer.IsComputer)
             {
-                var aiPlayer = game.CurrentPlayer as AIPlayer;
+                var movePlayerAI = game.CurrentPlayer;
+                var aiPlayer = movePlayerAI as AIPlayer;
                 if (aiPlayer == null)
                     break;
-                var aiMove = AIMoveLogic.GetMove(game.Board);
+                var aiMove = aiPlayer.MakeMove(game.Board);
                 var (aiGame, aiSequences) = ApplyMove(game.GameId, aiMove.row, aiMove.col, aiMove.letter);
                 game = aiGame;
-                moves.Add(new
+                var aiMoveObj = new
                 {
-                    player = aiPlayer.Name,
-                    isAI = true,
+                    player = movePlayerAI.Name,
+                    isAI = movePlayerAI.IsComputer,
                     move = new { aiMove.row, aiMove.col, aiMove.letter },
                     sosFormed = aiSequences.Count > 0,
                     newSequencesCount = aiSequences.Count,
-                    newSequences = aiSequences.Select(s => new { positions = s.Positions, foundBy = s.FoundBy }).ToList(),
+                    newSequences = aiSequences.Select(s => new {
+                        positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
+                        foundBy = s.FoundBy
+                    }).ToList(),
                     message = aiSequences.Count > 0
                         ? $"AI move successful! {aiSequences.Count} SOS sequence(s) formed!"
                         : "AI move successful!"
-                });
+                };
+                moves.Add(aiMoveObj);
+                game.MoveHistory.Add(aiMoveObj);
             }
             return (game, moves);
         }
