@@ -36,21 +36,7 @@ namespace SOS_API.Services
                     var move = aiPlayer.MakeMove(game.Board);
                     var (updatedGame, newSequences) = ApplyMove(game.GameId, move.row, move.col, move.letter);
                     game = updatedGame;
-                    var moveObj = new
-                    {
-                        player = movePlayer.Name,
-                        isAI = movePlayer.IsComputer,
-                        move = new { move.row, move.col, move.letter },
-                        sosFormed = newSequences.Count > 0,
-                        newSequencesCount = newSequences.Count,
-                        newSequences = newSequences.Select(s => new {
-                            positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
-                            foundBy = s.FoundBy
-                        }).ToList(),
-                        message = newSequences.Count > 0
-                            ? $"AI move successful! {newSequences.Count} SOS sequence(s) formed!"
-                            : "AI move successful!"
-                    };
+                    var moveObj = BuildMoveHistoryObject(movePlayer.Name, movePlayer.IsComputer, move.row, move.col, move.letter, newSequences, "AI move");
                     allMoves.Add(moveObj);
                     game.MoveHistory.Add(moveObj);
                 }
@@ -59,7 +45,6 @@ namespace SOS_API.Services
             }
             catch (ArgumentOutOfRangeException e)
             {
-                // Convert ArgumentOutOfRangeException from SOS_Board to ArgumentException for API consistency
                 throw new ArgumentException(e.Message, e);
             }
             // ArgumentException from GameEngine.CreateGameState (invalid game mode) bubbles up as-is
@@ -130,21 +115,7 @@ namespace SOS_API.Services
             var (updatedGame, newSequences) = ApplyMove(gameId, row, col, letter);
             game = updatedGame;
 
-            var moveObj = new
-            {
-                player = playerName,
-                isAI = isAI,
-                move = new { row, col, letter },
-                sosFormed = newSequences.Count > 0,
-                newSequencesCount = newSequences.Count,
-                newSequences = newSequences.Select(s => new {
-                    positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
-                    foundBy = s.FoundBy
-                }).ToList(),
-                message = newSequences.Count > 0
-                    ? $"Move successful! {newSequences.Count} SOS sequence(s) formed!"
-                    : "Move successful!"
-            };
+            var moveObj = BuildMoveHistoryObject(playerName, isAI, row, col, letter, newSequences);
             moves.Add(moveObj);
             game.MoveHistory.Add(moveObj);
 
@@ -158,25 +129,31 @@ namespace SOS_API.Services
                 var aiMove = aiPlayer.MakeMove(game.Board);
                 var (aiGame, aiSequences) = ApplyMove(game.GameId, aiMove.row, aiMove.col, aiMove.letter);
                 game = aiGame;
-                var aiMoveObj = new
-                {
-                    player = movePlayerAI.Name,
-                    isAI = movePlayerAI.IsComputer,
-                    move = new { aiMove.row, aiMove.col, aiMove.letter },
-                    sosFormed = aiSequences.Count > 0,
-                    newSequencesCount = aiSequences.Count,
-                    newSequences = aiSequences.Select(s => new {
-                        positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
-                        foundBy = s.FoundBy
-                    }).ToList(),
-                    message = aiSequences.Count > 0
-                        ? $"AI move successful! {aiSequences.Count} SOS sequence(s) formed!"
-                        : "AI move successful!"
-                };
+                var aiMoveObj = BuildMoveHistoryObject(movePlayerAI.Name, movePlayerAI.IsComputer, aiMove.row, aiMove.col, aiMove.letter, aiSequences, "AI move");
                 moves.Add(aiMoveObj);
                 game.MoveHistory.Add(aiMoveObj);
             }
             return (game, moves);
+        }
+
+        // Helper method to build move history objects
+        private object BuildMoveHistoryObject(string playerName, bool isAI, int row, int col, char letter, List<SOSSequence> newSequences, string moveType = "Move")
+        {
+            return new
+            {
+                player = playerName,
+                isAI = isAI,
+                move = new { row, col, letter },
+                sosFormed = newSequences.Count > 0,
+                newSequencesCount = newSequences.Count,
+                newSequences = newSequences.Select(s => new {
+                    positions = s.Positions.Select(pos => new { row = pos.Item1, col = pos.Item2 }).ToList(),
+                    foundBy = s.FoundBy
+                }).ToList(),
+                message = newSequences.Count > 0
+                    ? $"{moveType} successful! {newSequences.Count} SOS sequence(s) formed!"
+                    : $"{moveType} successful!"
+            };
         }
     }
 }
