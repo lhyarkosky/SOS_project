@@ -12,7 +12,7 @@ namespace SOS_API.Services
     {
         private static Dictionary<string, IGameState> _games = new Dictionary<string, IGameState>(); // if this was a bigger project id use db rather than a dictionary, but this should suffice for now
 
-        public async Task<(IGameState game, List<object> moves)> CreateGame(int boardSize, string gameMode, IPlayer player1, IPlayer player2)
+        public Task<(IGameState game, List<object> moves)> CreateGame(int boardSize, string gameMode, IPlayer player1, IPlayer player2)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace SOS_API.Services
                     game.MoveHistory.Add(moveObj);
                 }
 
-                return (game, allMoves);
+                return Task.FromResult((game, allMoves));
             }
             catch (ArgumentOutOfRangeException e)
             {
@@ -103,7 +103,7 @@ namespace SOS_API.Services
         }
 
         // Handles a human move and automatically processes AI moves if needed
-        public async Task<(IGameState game, List<object> moves)> MakeMove(string gameId, int row, int col, char letter)
+        public Task<(IGameState game, List<object> moves)> MakeMove(string gameId, int row, int col, char letter)
         {
             var moves = new List<object>();
             // Capture the player before the move is processed
@@ -133,7 +133,7 @@ namespace SOS_API.Services
                 moves.Add(aiMoveObj);
                 game.MoveHistory.Add(aiMoveObj);
             }
-            return (game, moves);
+            return Task.FromResult((game, moves));
         }
 
         // Helper method to build move history objects
