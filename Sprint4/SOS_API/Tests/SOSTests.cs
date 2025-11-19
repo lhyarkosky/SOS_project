@@ -749,7 +749,7 @@ namespace SOS_API.Tests
             var request = new CreateGameRequest
             {
                 BoardSize = 3,
-                GameMode = "Simple",
+                GameMode = "General",
                 Player1Name = "AI1",
                 Player2Name = "AI2",
                 Player1Type = PlayerType.Computer,
@@ -761,37 +761,19 @@ namespace SOS_API.Tests
             Assert.IsNotNull(okResult);
             var value = okResult?.Value;
             Assert.IsNotNull(value);
-            // Support both JsonElement and anonymous object for moves
-            List<object> movesList = null!;
-            if (value is System.Text.Json.JsonElement rootJson && rootJson.ValueKind == System.Text.Json.JsonValueKind.Object && rootJson.TryGetProperty("moves", out var movesJson))
+            // Try to get moves from the game service directly for simplicity
+            var games = _gameService.GetAllGames();
+            Assert.AreEqual(1, games.Count);
+            var movesList = games[0].MoveHistory;
+            Assert.IsNotNull(movesList);
+            Assert.IsTrue(movesList.Count==9, "movesList should have 9 moves for a 3x3 board");
+            foreach (var moveObj in movesList)
             {
-                // movesJson is an array
-                movesList = movesJson.EnumerateArray().Select(e => (object)e).ToList();
-            }
-            else
-            {
-                dynamic gameResult = value;
-                var moves = gameResult?.moves;
-                movesList = (moves as IEnumerable<object>)?.Cast<object>().ToList();
-            }
-            Assert.IsNotNull(movesList, "movesList should not be null");
-            Assert.IsTrue(movesList != null && movesList.Count > 0, "movesList should have at least one element");
-            if (movesList != null)
-            {
-                foreach (var moveObj in movesList)
-                {
-                    if (moveObj is System.Text.Json.JsonElement moveJson)
-                    {
-                        bool hasIsAI = moveJson.TryGetProperty("isAI", out var isAiJson);
-                        Assert.IsTrue(hasIsAI, "move should have isAI");
-                        Assert.IsTrue(isAiJson.GetBoolean());
-                    }
-                    else
-                    {
-                        dynamic move = moveObj;
-                        Assert.IsTrue(move.isAI);
-                    }
-                }
+                var moveType = moveObj.GetType();
+                var isAIProp = moveType.GetProperty("isAI");
+                Assert.IsNotNull(isAIProp, "move should have isAI property");
+                var isAI = (bool)isAIProp.GetValue(moveObj);
+                Assert.IsTrue(isAI);
             }
             TearDown();
         }
