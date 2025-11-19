@@ -692,5 +692,170 @@ namespace SOS_API.Tests
         }
 
     
+        // AC 6.1 
+        [Test]
+        public void CreateGame_WithHumanAndAIPlayers_PlayerTypesAreAccepted()
+        {
+            var request = new CreateGameRequest
+            {
+                BoardSize = 5,
+                GameMode = "Simple",
+                Player1Name = "HumanPlayer",
+                Player2Name = "AIPlayer",
+                Player1Type = PlayerType.Human,
+                Player2Type = PlayerType.Computer
+            };
+            var result = _controller.CreateGame(request);
+            Assert.IsInstanceOf<OkObjectResult>(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            Assert.IsNotNull(okResult);
+            var value = okResult?.Value;
+            Assert.IsNotNull(value);
+            var valueType = value.GetType();
+            var gameProp = valueType.GetProperty("game");
+            Assert.IsNotNull(gameProp, "API response should have a 'game' property");
+            var gameObj = gameProp.GetValue(value);
+            Assert.IsNotNull(gameObj, "game should not be null");
+            // Game might be returned as a System.Text.Json.JsonElement (when serialized/deserialized) OR as an anonymous object
+            if (gameObj is System.Text.Json.JsonElement gameJson)
+            {
+                Assert.IsTrue(gameJson.ValueKind == System.Text.Json.JsonValueKind.Object, "game should be an object");
+                bool gotPlayers = gameJson.TryGetProperty("players", out var playersElement);
+                Assert.IsTrue(gotPlayers, "game JsonElement should have 'players' property");
+                Assert.IsTrue(playersElement.ValueKind == System.Text.Json.JsonValueKind.Array, "players should be an array");
+                Assert.AreEqual(2, playersElement.GetArrayLength());
+                Assert.AreEqual("HumanPlayer", playersElement[0].GetString());
+                Assert.AreEqual("AIPlayer", playersElement[1].GetString());
+            }
+            else
+            {
+                var gameType = gameObj == null ? null : gameObj.GetType();
+                Assert.IsNotNull(gameType, "game type should not be null");
+                var playersProp = gameType.GetProperty("players");
+                Assert.IsNotNull(playersProp, "game should have a 'players' property");
+                var playersObj = playersProp.GetValue(gameObj) as object[];
+                Assert.IsNotNull(playersObj, "players should be an array");
+                Assert.AreEqual(2, playersObj.Length);
+                Assert.AreEqual("HumanPlayer", playersObj[0]?.ToString());
+                Assert.AreEqual("AIPlayer", playersObj[1]?.ToString());
+            }
+            TearDown();
+        }
+
+        // AC 6.2
+        [Test]
+        public void CreateGame_PlayerTypeSelectionPersistsInGameState()
+        {
+            var request = new CreateGameRequest
+            {
+                BoardSize = 5,
+                GameMode = "Simple",
+                Player1Name = "P1",
+                Player2Name = "P2",
+                Player1Type = PlayerType.Computer,
+                Player2Type = PlayerType.Human
+            };
+            var result = _controller.CreateGame(request);
+            Assert.IsInstanceOf<OkObjectResult>(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            Assert.IsNotNull(okResult);
+            var value = okResult?.Value;
+            Assert.IsNotNull(value);
+            var valueType = value.GetType();
+            var gameProp = valueType.GetProperty("game");
+            Assert.IsNotNull(gameProp, "API response should have a 'game' property");
+            var gameObj = gameProp.GetValue(value);
+            Assert.IsNotNull(gameObj, "game should not be null");
+            if (gameObj is System.Text.Json.JsonElement gameJson)
+            {
+                bool gotPlayers = gameJson.TryGetProperty("players", out var playersElement);
+                Assert.IsTrue(gotPlayers, "game JsonElement should have 'players' property");
+                Assert.IsTrue(playersElement.ValueKind == System.Text.Json.JsonValueKind.Array, "players should be an array");
+                Assert.AreEqual("P1", playersElement[0].GetString());
+                Assert.AreEqual("P2", playersElement[1].GetString());
+                bool gotGameId = gameJson.TryGetProperty("gameId", out var idElement);
+                Assert.IsTrue(gotGameId, "game JsonElement should have 'gameId' property");
+                var gameId = idElement.GetString();
+                Assert.IsNotNull(gameId, "gameId should not be null");
+                var game = _gameService.GetGame(gameId);
+                Assert.IsNotNull(game, "game should not be null");
+                Assert.IsTrue(game.Players[0].IsComputer);
+                Assert.IsFalse(game.Players[1].IsComputer);
+            }
+            else
+            {
+                var gameType = gameObj == null ? null : gameObj.GetType();
+                Assert.IsNotNull(gameType, "game type should not be null");
+                var playersProp = gameType.GetProperty("players");
+                Assert.IsNotNull(playersProp, "game should have a 'players' property");
+                var playersObj = playersProp.GetValue(gameObj) as object[];
+                Assert.IsNotNull(playersObj, "players should be an array");
+                Assert.AreEqual("P1", playersObj[0]?.ToString());
+                Assert.AreEqual("P2", playersObj[1]?.ToString());
+                var gameIdProp = gameType.GetProperty("gameId");
+                Assert.IsNotNull(gameIdProp, "game should have a 'gameId' property");
+                var gameId = gameIdProp.GetValue(gameObj)?.ToString();
+                Assert.IsNotNull(gameId, "gameId should not be null");
+                var game = _gameService.GetGame(gameId);
+                Assert.IsNotNull(game, "game should not be null");
+                Assert.IsTrue(game.Players[0].IsComputer);
+                Assert.IsFalse(game.Players[1].IsComputer);
+            }
+            TearDown();
+        }
+
+        // AC 6.4
+        [Test]
+        public async Task CreateGame_WithAIPlayers_AIMakesMovesAutomatically()
+        {
+            var request = new CreateGameRequest
+            {
+                BoardSize = 3,
+                GameMode = "Simple",
+                Player1Name = "AI1",
+                Player2Name = "AI2",
+                Player1Type = PlayerType.Computer,
+                Player2Type = PlayerType.Computer
+            };
+            var result = _controller.CreateGame(request);
+            Assert.IsInstanceOf<OkObjectResult>(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            Assert.IsNotNull(okResult);
+            var value = okResult?.Value;
+            Assert.IsNotNull(value);
+            // Support both JsonElement and anonymous object for moves
+            List<object> movesList = null!;
+            if (value is System.Text.Json.JsonElement rootJson && rootJson.ValueKind == System.Text.Json.JsonValueKind.Object && rootJson.TryGetProperty("moves", out var movesJson))
+            {
+                // movesJson is an array
+                movesList = movesJson.EnumerateArray().Select(e => (object)e).ToList();
+            }
+            else
+            {
+                dynamic gameResult = value;
+                var moves = gameResult?.moves;
+                movesList = (moves as IEnumerable<object>)?.Cast<object>().ToList();
+            }
+            Assert.IsNotNull(movesList, "movesList should not be null");
+            Assert.IsTrue(movesList != null && movesList.Count > 0, "movesList should have at least one element");
+            if (movesList != null)
+            {
+                foreach (var moveObj in movesList)
+                {
+                    if (moveObj is System.Text.Json.JsonElement moveJson)
+                    {
+                        bool hasIsAI = moveJson.TryGetProperty("isAI", out var isAiJson);
+                        Assert.IsTrue(hasIsAI, "move should have isAI");
+                        Assert.IsTrue(isAiJson.GetBoolean());
+                    }
+                    else
+                    {
+                        dynamic move = moveObj;
+                        Assert.IsTrue(move.isAI);
+                    }
+                }
+            }
+            TearDown();
+        }
     }
 }
