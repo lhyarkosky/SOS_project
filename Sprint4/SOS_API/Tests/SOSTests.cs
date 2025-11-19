@@ -748,8 +748,8 @@ namespace SOS_API.Tests
         {
             var request = new CreateGameRequest
             {
-                BoardSize = 5,
-                GameMode = "Simple",
+                BoardSize = 7,
+                GameMode = "General",
                 Player1Name = "P1",
                 Player2Name = "P2",
                 Player1Type = PlayerType.Computer,
@@ -804,7 +804,7 @@ namespace SOS_API.Tests
             TearDown();
         }
 
-        // AC 6.4
+        // AC 6.3
         [Test]
         public async Task CreateGame_WithAIPlayers_AIMakesMovesAutomatically()
         {
