@@ -1,0 +1,92 @@
+.game-info {
+  border: 1px solid #ccc;
+  padding: 20px;
+  min-width: 250px;
+  max-width: 300px;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 10px;
+}
+
+.info-header h3 {
+  margin: 0;
+}
+
+.new-game-button {
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.info-section {
+  margin-bottom: 15px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item.winner {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.scores-section {
+  margin-bottom: 15px;
+}
+
+.scores-section h4 {
+  margin: 0 0 10px 0;
+}
+
+.scores {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid #eee;
+}
+
+.score {
+  font-weight: bold;
+}
+
+.sequences-section {
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+
+.sequences-section h4 {
+  margin: 0 0 10px 0;
+}
+
+.sequences-count {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}

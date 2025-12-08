@@ -1,0 +1,5 @@
+AC 6.3,"AIPlayer; AIMoveLogic; GameEngine; GameService; SOSController; IGameState; BaseGameState","MakeMove; GetMove; ProcessMove; CreateGame; ApplyMove; MakeMove (controller)","Computer player(s) automatically make moves when it's their turn; move logic delegated to AIMoveLogic; GameService loops for AI turns; game state updated after each move"
+AC ID,Class Name(s),Method Names(s),Notes
+
+AC 6.2,"IPlayer; HumanPlayer; AIPlayer; CreateGameRequest; GameService; SOSController; BaseGameState; GeneralGameState","CreateGame; InstantiatePlayers; DependencyInjection","Player type selection persists via dependency injection; correct model instantiated and stored in game state"
+
