@@ -78,6 +78,23 @@ class GameService {
     return await response.json();
   }
 
+  // Get move history for a game
+  static async getMoveHistory(gameId) {
+    const response = await fetch(`${API_BASE}/${encodeURIComponent(gameId)}/moveHistory`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(errorData || `Failed to fetch move history: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
   // Make a move in the game
   static async makeMove(gameId, row, col, letter) {
     const response = await fetch(`${API_BASE}/move`, {
