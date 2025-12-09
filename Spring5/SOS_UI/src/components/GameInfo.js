@@ -1,16 +1,79 @@
 import React from 'react';
 import './GameInfo.css';
+import GameService from '../services/GameService';
 
 const GameInfo = ({ gameData, onNewGame }) => {
   if (!gameData) return null;
+
+  const handleExport = async () => {
+    try {
+      // Prefer persisted id in localStorage, fallback to current gameData.gameId
+      const savedId = (() => {
+        try { return localStorage.getItem('sos_game_id'); } catch { return null; }
+      })();
+
+      const gameId = savedId || gameData.gameId;
+      if (!gameId) {
+        window.alert('No game id available to export.');
+        return;
+      }
+
+      const moves = await GameService.getMoveHistory(gameId);
+
+      // Format the moves into readable text. If it's an array, pretty-print as JSON
+      let textContent;
+      if (Array.isArray(moves)) {
+        // If elements look like simple move objects, join lines; else pretty JSON
+        const isSimple = moves.length > 0 && typeof moves[0] === 'object' && ('row' in moves[0] || 'col' in moves[0] || 'letter' in moves[0]);
+        if (isSimple) {
+          textContent = moves.map((m, i) => {
+            const row = m.row ?? m.Row ?? '';
+            const col = m.col ?? m.Col ?? '';
+            const letter = m.letter ?? m.Letter ?? '';
+            const player = m.player ?? m.playerName ?? m.Player ?? '';
+            const time = m.timestamp ?? m.time ?? '';
+            return `${i + 1}. ${player} placed "${letter}" at (${row}, ${col}) ${time ? `at ${time}` : ''}`.trim();
+          }).join('\n');
+        } else {
+          textContent = JSON.stringify(moves, null, 2);
+        }
+      } else if (typeof moves === 'object') {
+        textContent = JSON.stringify(moves, null, 2);
+      } else {
+        textContent = String(moves);
+      }
+
+      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeId = gameId.replace(/[^a-zA-Z0-9-_]/g, '_');
+      a.download = `sos_game_${safeId}_moves.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export move history', err);
+      window.alert(`Failed to export move history: ${err.message || err}`);
+    }
+  };
 
   return (
     <div className="game-info">
       <div className="info-header">
         <h3>Game Status</h3>
-        <button onClick={onNewGame} className="new-game-button">
-          New Game
-        </button>
+        <div className="info-header-actions">
+          <button onClick={onNewGame} className="new-game-button">
+            New Game
+          </button>
+
+          {gameData.status?.toLowerCase() === 'finished' && (
+            <button onClick={handleExport} className="export-game-button">
+              Export Game
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="info-section">
