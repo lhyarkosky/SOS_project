@@ -18,37 +18,32 @@ const GameInfo = ({ gameData, onNewGame }) => {
         return;
       }
 
-      const moves = await GameService.getMoveHistory(gameId);
+      // Fetch both the serialized game and its move history so we can export a full package
+      const [moves, fullGame] = await Promise.all([
+        GameService.getMoveHistory(gameId),
+        // Use API to get the canonical serialized game when available
+        (async () => {
+          try {
+            return await GameService.getGame(gameId);
+          } catch (e) {
+            // fallback to client-side gameData if server request fails
+            return gameData;
+          }
+        })()
+      ]);
 
-      // Format the moves into readable text. If it's an array, pretty-print as JSON
-      let textContent;
-      if (Array.isArray(moves)) {
-        // If elements look like simple move objects, join lines; else pretty JSON
-        const isSimple = moves.length > 0 && typeof moves[0] === 'object' && ('row' in moves[0] || 'col' in moves[0] || 'letter' in moves[0]);
-        if (isSimple) {
-          textContent = moves.map((m, i) => {
-            const row = m.row ?? m.Row ?? '';
-            const col = m.col ?? m.Col ?? '';
-            const letter = m.letter ?? m.Letter ?? '';
-            const player = m.player ?? m.playerName ?? m.Player ?? '';
-            const time = m.timestamp ?? m.time ?? '';
-            return `${i + 1}. ${player} placed "${letter}" at (${row}, ${col}) ${time ? `at ${time}` : ''}`.trim();
-          }).join('\n');
-        } else {
-          textContent = JSON.stringify(moves, null, 2);
-        }
-      } else if (typeof moves === 'object') {
-        textContent = JSON.stringify(moves, null, 2);
-      } else {
-        textContent = String(moves);
-      }
+      const payload = {
+        game: fullGame || gameData,
+        moves: moves || []
+      };
 
-      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+      const textContent = JSON.stringify(payload, null, 2);
+      const blob = new Blob([textContent], { type: 'application/json;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       const safeId = gameId.replace(/[^a-zA-Z0-9-_]/g, '_');
-      a.download = `sos_game_${safeId}_moves.txt`;
+      a.download = `sos_game_${safeId}_full.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
