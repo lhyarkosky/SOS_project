@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import GameService from '../services/GameService';
 import './GameSetup.css';
 
-const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
+const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading, onReplayFileSelected }) => {
   const [boardSize, setBoardSize] = useState(5);
   const [gameMode, setGameMode] = useState('Simple');
   const [player1Name, setPlayer1Name] = useState('');
@@ -41,6 +41,23 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
       onError(error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Replay upload UI handlers (file input is hidden and sits below Create Game button)
+  const fileInputRef = useRef(null);
+
+  const handleReplayClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    if (!onReplayFileSelected) return;
+    try {
+      await onReplayFileSelected(e);
+    } finally {
+      // Reset input so the same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = null;
     }
   };
 
@@ -173,6 +190,24 @@ const GameSetup = ({ onGameCreated, onError, isLoading, setIsLoading }) => {
         >
           {isLoading ? 'Creating...' : 'Create Game'}
         </button>
+        <div style={{ marginTop: '8px' }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,application/json,text/plain"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            className="replay-button"
+            onClick={handleReplayClick}
+            disabled={isLoading}
+            style={{ marginLeft: '0' }}
+          >
+            Replay Game
+          </button>
+        </div>
       </div>
     </div>
   );
