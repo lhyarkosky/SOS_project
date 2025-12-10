@@ -23,7 +23,7 @@ const SimulateGame = ({ gameData, moves, onNewGame }) => {
       acc[player] = 0;
       return acc;
     }, {}));
-  }, [gameData]);
+  }, [gameData, finalScores]);
 
   const playSimulation = () => {
     setIsPlaying(true);
@@ -87,7 +87,7 @@ const SimulateGame = ({ gameData, moves, onNewGame }) => {
       setIsPlaying(false);
       setShowMoveMessage(false);
     }
-  }, [isPlaying, currentMoveIndex, moves, currentBoard, currentScores, simulationSpeed, showMoveMessage]);
+  }, [isPlaying, currentMoveIndex, moves, currentBoard, currentSequences, currentScores, simulationSpeed, showMoveMessage]);
 
   const getCellContent = (row, col) => {
     const cellKey = `${row},${col}`;
